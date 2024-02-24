@@ -4,5 +4,6 @@
 ## Installation
 
 ```bash
-pip install binance-connector
+python3 setuptrobot2module.py build_ext --inplace
+python3 trobot2.py
 ```
