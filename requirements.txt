@@ -1,0 +1,2 @@
+binance-connector==3.2.0
+Cython==3.0.8
