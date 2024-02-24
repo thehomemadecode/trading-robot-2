@@ -1,7 +1,8 @@
 # Trading Robot 2
 [![Python version](https://img.shields.io/pypi/pyversions/binance-connector)](https://www.python.org/downloads/)
 
-The trading robot for Binance: [![PyPI version](https://img.shields.io/pypi/v/binance-connector)](https://pypi.python.org/pypi/binance-connector)
+The trading robot for Binance
+[![PyPI version](https://img.shields.io/pypi/v/binance-connector)](https://pypi.python.org/pypi/binance-connector)
 
 ## Installation
 ```bash
