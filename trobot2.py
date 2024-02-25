@@ -23,7 +23,8 @@ def letter_to_number(arg):
         "O": 1,
         "H": 2,
         "L": 3,
-        "C": 4
+        "C": 4,
+        "V": 5
     }
     return switcher.get(arg, 4)
 
@@ -37,10 +38,10 @@ def main():
     fx = fxtypes[1]
     status = statustypes[1]
     maxklines = 200
-    graphtimeperiod = "4h"
-    hdate = "21/02/24-06:00"
+    graphtimeperiod = "1d"
+    hdate = "17/02/24-03:00"
     period = 9
-    OHLC = "C"
+    OHLC = "V"
         
     # connect binance
     global client
@@ -78,28 +79,26 @@ def main():
         mdate = dateconvert(hdate)
         bars = client.klines(symbol, graphtimeperiod, startTime = mdate, limit = maxklines)
         totalbar = len(bars)
-        OHLCpoint = letter_to_number(OHLC)
         barOHLC = []
         for b in bars:
-            temp1 = float(b[1])
-            temp2 = float(b[2])
-            temp3 = float(b[3])
-            temp4 = float(b[4])
-            temp = []
-            temp.append(temp1)
-            temp.append(temp2)
-            temp.append(temp3)
-            temp.append(temp4)
-            barOHLC.append(temp)
-        
+            barOHLCrow = []
+            for col in range(1,6):
+                barOHLCrow.append(float(b[col]))
+            barOHLCrow.append(float(((barOHLCrow[0]+barOHLCrow[3])/2)*barOHLCrow[4]))
+            barOHLC.append(barOHLCrow)
         # print selected symbol OHLC bars
         # too many lines!
-        #print("[.]",symbol,":",barOHLC)
+        #print("[.]",totalbar,symbol,":",barOHLC)
         
         # get and print simple moving average
-        print("[*] ",symbol," SMA(",period,"): ",trobot2.sma(barOHLC,OHLCpoint-1,period),sep="")
+        OHLCpoint = letter_to_number(OHLC)
+        smaresult = round(trobot2.sma(barOHLC,OHLCpoint-1,period),4)
+        volKlot = round((barOHLC[totalbar-1][4]/1000),2)
+        volKusd = round((barOHLC[totalbar-1][5]/1000),2)
+        print("[*] ",symbol," SMA(",period,")",OHLC,": ",round((smaresult/1000),2)," Volume(K):",volKlot," Volume($K):",volKusd,sep="")
         s += 1
-        if s==3:break # temporary limiter
+        time.sleep(3)
+        if s==1:break # temporary limiter
 
 
 
