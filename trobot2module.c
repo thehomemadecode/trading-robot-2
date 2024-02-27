@@ -1,5 +1,13 @@
 #include <Python.h>
 
+static PyObject *check(PyObject *self, PyObject *args) {
+	PyObject* data;
+	if (!PyArg_ParseTuple(args, "i", &data)) {
+        return NULL;
+    }
+	return Py_BuildValue("i", data);
+}
+
 static PyObject *sma(PyObject *self, PyObject *args) {
     PyObject* py_list;
 	PyObject* py_list2;
@@ -23,6 +31,7 @@ static PyObject *sma(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef trobot2Methods[] = {
+    {"check", check, METH_VARARGS, "check"},
     {"sma", sma, METH_VARARGS, "Simple moving average"},
     {NULL, NULL, 0, NULL}
 };
