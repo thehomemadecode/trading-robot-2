@@ -1,0 +1,67 @@
+name: Build C Extension Across Python Versions on Linux and Windows
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Build C extension
+        run: |
+          python setup.py build_ext --inplace
+      
+      - name: Find and Zip Compiled Extension
+        run: |
+          FILE=$(find . -type f -name "trobot2*.so")
+          if [ -z "$FILE" ]; then
+            echo "Compiled file not found."
+            exit 1
+          else
+            ZIP_NAME="trobot2-dev-py${{ matrix.python-version }}-linux.zip"
+            zip -r $ZIP_NAME $FILE
+            echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
+          fi
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build C extension
+        run: python setup.py build_ext --inplace
+        shell: pwsh
+      - name: Package Extension
+        run: |
+          $zipName = "trobot2-dev-py${{ matrix.python-version }}-windows.zip"
+          echo "ZIP_NAME=$zipName" | Out-File -Append -FilePath $env:GITHUB_ENV
+          Compress-Archive -Path *.pyd -DestinationPath $zipName
+        shell: pwsh
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
