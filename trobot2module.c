@@ -3,8 +3,18 @@
 static PyObject *check(PyObject *self, PyObject *args) {
 	PyObject* data;
 	if (!PyArg_ParseTuple(args, "i", &data)) {
-        return NULL;
-    }
+		return NULL;
+	}
+	data = subcheck(data);
+	return Py_BuildValue("i", data);
+}
+
+static PyObject *subcheck(PyObject *self, PyObject *args) {
+	PyObject* data;
+	if (!PyArg_ParseTuple(args, "i", &data)) {
+		return NULL;
+	}
+	data++;
 	return Py_BuildValue("i", data);
 }
 
