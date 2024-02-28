@@ -9,13 +9,9 @@ static PyObject *check(PyObject *self, PyObject *args) {
 	return Py_BuildValue("i", data);
 }
 
-static PyObject *subcheck(PyObject *self, PyObject *args) {
-	PyObject* data;
-	if (!PyArg_ParseTuple(args, "i", &data)) {
-		return NULL;
-	}
-	data++;
-	return Py_BuildValue("i", data);
+int subcheck(int x) {
+	x++;
+  return x;
 }
 
 static PyObject *sma(PyObject *self, PyObject *args) {
