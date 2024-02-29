@@ -68,9 +68,9 @@ def main():
             sql1 = f"INSERT INTO {prefix}_{symbol}_{graphtimeperiod} "
             sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
             for b in bars:
-                dizi = b
-                # Diziyi düzeltme
-                sql3 = ",".join(str(x) for x in dizi)
+                arrayb = b
+                # reshape arrayb
+                sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
                 sql = sql1+sql2+f"VALUES({sql3})"
                 dbcursor.execute(sql)
