@@ -37,10 +37,10 @@ def main():
     fx = fxtypes[1]
     status = statustypes[1]
     #graphtimeperiodlist = ["1s", "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"]
-    graphtimeperiodlist = ["1m", "5m", "15m", "1h", "4h", "1d"]
+    graphtimeperiodlist = ["5m", "1h", "1d"]
     prefix = "tr2"
     dbfilename = "candlestick.db"
-    limit = 400
+    limit = 10
     
     # show infos
     file = open(filename, "r")

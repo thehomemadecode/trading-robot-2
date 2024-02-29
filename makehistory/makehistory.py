@@ -23,7 +23,7 @@ def main():
     status = statustypes[1]
     maxklines = 200
     #graphtimeperiodlist = ["1s", "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"]
-    graphtimeperiodlist = ["1m", "5m", "15m", "1h", "4h", "1d"]
+    graphtimeperiodlist = ["5m", "1h", "1d"]
     prefix = "tr2"
     dbfilename = "candlestick.db"
 
@@ -74,14 +74,14 @@ def main():
                 #print(sql3)
                 sql = sql1+sql2+f"VALUES({sql3})"
                 dbcursor.execute(sql)
-                dbconnection.commit()
+            dbconnection.commit()
             
             #symbolTable[1][i].append(bars)
             #i += 1
         s += 1
         print("----",s,say,"-----------------------")
-        time.sleep(1)
-        #if s==1:break # temporary limiter
+        #time.sleep(1)
+        if s==10:break # temporary limiter
     
     print(s)
     print(say)
