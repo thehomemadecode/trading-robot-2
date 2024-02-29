@@ -81,7 +81,7 @@ def main():
         s += 1
         print("----",s,say,"-----------------------")
         #time.sleep(1)
-        if s==10:break # temporary limiter
+        if s==3:break # temporary limiter
     
     print(s)
     print(say)
