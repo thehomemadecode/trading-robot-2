@@ -54,7 +54,7 @@ def letter_to_number(arg):
         "V": 4, # volume
         "Q": 5  # quote assest volume
     }
-    return switcher.get(arg, 4)
+    return switcher.get(arg, 3)
 
 def dbconnect(dbfilename):
     dbcon = sqlite3.connect(dbfilename)
@@ -128,9 +128,9 @@ def db_check(dbcon,client):
             print(int(time2),end=" ")
             print(fark,outdatedbarnumber)
             dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT {outdatedbarnumber};")
-            son_kayitlar = dbcur.fetchall()
-            for kayit in son_kayitlar:
-                sql = f"DELETE FROM {dbtable} WHERE open_time={kayit[0]}"
+            last_records = dbcur.fetchall()
+            for record in last_records:
+                sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
                 dbcur.execute(sql)
                 dbcon.commit()
 
@@ -140,10 +140,10 @@ def db_check(dbcon,client):
             klimit = outdatedbarnumber + 1
             bars = client.klines(temp[1], temp[2], limit = klimit)
             for b in range(0,len(bars)):
-                dizi = bars[b]
-                print("dizi",dizi)
-                # Diziyi düzeltme
-                sql3 = ",".join(str(x) for x in dizi)
+                arrayb = bars[b]
+                print("arrayb",arrayb)
+                # reshape arrayb
+                sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
                 sql = sql1+sql2+f"VALUES({sql3})"
                 time3 = int(bars[b][0]/1000)
