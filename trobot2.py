@@ -127,6 +127,7 @@ def db_check(dbcon,client):
             print(int(time1),end=" ")
             print(int(time2),end=" ")
             print(fark,outdatedbarnumber)
+            
             dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT {outdatedbarnumber};")
             last_records = dbcur.fetchall()
             for record in last_records:
@@ -150,7 +151,7 @@ def db_check(dbcon,client):
                 dbcur.execute(sql)
             dbcon.commit()
             #print("")
-
+            
         count += 1
         #if (count == 6):break
     return 0
@@ -164,16 +165,20 @@ def consistency_db_check(dbcon):
         chkval = int(timetable[temp[2]]*60000)
         dbcur.execute(f"SELECT id, open_time FROM {dbtable} ORDER BY open_time DESC;")
         opentimes = dbcur.fetchall()
-        before = opentimes[1][0]
+        before = int(opentimes[0][1])
         opentimes.pop(0)
+        print(dbtable,"--> Check value:",chkval,"-->\t",end="")
+        passcounter = len(opentimes)
         for ot in opentimes:
             after = int(ot[1])
             val = before - after
             br = False
             if (chkval != val):
-                #print("Check value:",chkval,end= "\t")
-                print("Consistency check FAILED: ",dbtable,"\t id@",ot[0])
+                print("Consistency check: FAILED ",dbtable,"\t id@",ot[0],after,before,chkval,val)
                 br = True
+            else:
+                passcounter -= 1
+                if (passcounter == 0):print("Consistency check: PASSED")
             if (br):break
             before = after
     return 0
