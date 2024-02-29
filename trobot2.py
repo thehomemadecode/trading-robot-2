@@ -132,32 +132,51 @@ def db_check(dbcon,client):
             for record in last_records:
                 sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
                 dbcur.execute(sql)
-                dbcon.commit()
+            dbcon.commit()
 
-            '''
             sql1 = f"INSERT INTO {dbtable} "
             sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
             klimit = outdatedbarnumber + 1
             bars = client.klines(temp[1], temp[2], limit = klimit)
             for b in range(0,len(bars)):
                 arrayb = bars[b]
-                print("arrayb",arrayb)
+                #print("arrayb",arrayb)
                 # reshape arrayb
                 sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
                 sql = sql1+sql2+f"VALUES({sql3})"
                 time3 = int(bars[b][0]/1000)
-                print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time3)),end=" ")
+                #print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time3)),end=" ")
                 dbcur.execute(sql)
             dbcon.commit()
-            print("")
-            '''
+            #print("")
+
         count += 1
         #if (count == 6):break
     return 0
 
-
-
+def consistency_db_check(dbcon):
+    dbcur = dbcon.cursor()
+    dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ;")
+    dbtables = [row[0] for row in dbcur.fetchall()]
+    for dbtable in dbtables:
+        temp = [x for x in dbtable.split("_")]
+        chkval = int(timetable[temp[2]]*60000)
+        dbcur.execute(f"SELECT id, open_time FROM {dbtable} ORDER BY open_time DESC;")
+        opentimes = dbcur.fetchall()
+        before = opentimes[1][0]
+        opentimes.pop(0)
+        for ot in opentimes:
+            after = int(ot[1])
+            val = before - after
+            br = False
+            if (chkval != val):
+                #print("Check value:",chkval,end= "\t")
+                print("Consistency check FAILED: ",dbtable,"\t id@",ot[0])
+                br = True
+            if (br):break
+            before = after
+    return 0
 
 def main():
     # read configs
@@ -175,7 +194,7 @@ def main():
 
     fx = fxtypes[1]
     status = statustypes[1]
-    graphtimeperiod = graphtimeperiodlist[3]
+    graphtimeperiod = graphtimeperiodlist[2]
     
     allrules = init_rules(config['rules'])
 
@@ -184,6 +203,7 @@ def main():
     
     client = Spot()
     temp = db_check(dbcon,client)
+    temp = consistency_db_check(dbcon)
     dbcon.close()
     
     #print(selecteddata)
@@ -201,15 +221,6 @@ def main():
     result = tr.cryptocurrencyGate(selecteddata,col,allrules)
     print(result,len(result))
     '''
-
-
-
-
-    
-
-
-
-
 
 # most probably main
 if __name__ == '__main__':
