@@ -1,4 +1,5 @@
 import trobot2 as tr
+import sqlite3
 
 # read config.ini
 def read_config(filename):
@@ -17,8 +18,12 @@ def read_config(filename):
 
 filename = 'config.ini'
 config = read_config(filename)
+
 fx = config['trobot Inputs']['fx']
-status = config['trobot Inputs']['status']
+graphtimeperiod = config['trobot Inputs']['graphtimeperiod']
+
+dbfilename = config['database settings']['dbfilename']
+prefix = config['database settings']['prefix']
 
 allrules = []
 for getrule in config['rules']:
@@ -27,6 +32,38 @@ for getrule in config['rules']:
     ruleitem.append(getrule)
     ruleitem.append(config['rules'][f'{getrule}'])
 
+# convert OHLC letters to numbers, default:C
+def letter_to_number(arg):
+    switcher = {
+        "O": 1,
+        "H": 2,
+        "L": 3,
+        "C": 4,
+        "V": 5
+    }
+    return switcher.get(arg, 4)
+
+def dbconnect(dbfilename):
+    dbconnection = sqlite3.connect(dbfilename)
+    return dbconnection
+
+dbconnection = dbconnect(dbfilename)
+dbcursor = dbconnection.cursor()
+dbcursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ;")
+dbtables = [row[0] for row in dbcursor.fetchall()]
+for dbtable in dbtables:
+    temp = [x for x in dbtable.split("_")]
+    if (graphtimeperiod==temp[2]):
+        dbcursor.execute(f"SELECT * FROM {dbtable}")
+        data = dbcursor.fetchall()
+        print(f"[{dbtable}]:")
+        count = 0
+        for row in reversed(data):
+            print(row[2], row[3], row[4], row[5], row[6])
+            count += 1
+            if (count == 5):break
+
+dbconnection.close()
 
 # call c++ functions
 def check1(data):
@@ -54,11 +91,6 @@ def execute_function(func_name, *args):
     else:
         return "Function not found"
 
-
-
-
 for getrule in allrules:
     result = execute_function(getrule[0], int(getrule[1]))
     print(getrule,result)
-    
-   
