@@ -59,7 +59,6 @@ def main():
         #symbolTable.append(symbol)
         #symbolTable.append([])
         #i = 0
-        
         for graphtimeperiod in graphtimeperiodlist:
             print(symbol,graphtimeperiod)
             #symbolTable[1].append([graphtimeperiod])
@@ -81,14 +80,10 @@ def main():
         s += 1
         print("----",s,say,"-----------------------")
         #time.sleep(1)
-        if s==3:break # temporary limiter
-    
+        if s==100:break # temporary limiter
     print(s)
     print(say)
-    
-    
     dbconnection.close()
-    
     '''
     print(symbolTable)
     print("*********************************************")
@@ -102,12 +97,6 @@ def main():
             print(data)
         print("*********************************************")
     '''
-
-
-
-
-
-
 # most probably main
 if __name__ == '__main__':
     main()
