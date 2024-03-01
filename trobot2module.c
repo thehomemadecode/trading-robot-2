@@ -42,6 +42,7 @@ static PyObject *check(PyObject *self, PyObject *args) {
 
 int subcheck(int x) {
 	x++;
+	// test3
   return x;
 }
 
