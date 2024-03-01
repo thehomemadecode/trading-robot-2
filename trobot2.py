@@ -128,20 +128,21 @@ def db_check(dbcon,client):
             print(int(time2),end=" ")
             print(fark,outdatedbarnumber)
             
-            dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT {outdatedbarnumber};")
+            dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
             last_records = dbcur.fetchall()
             for record in last_records:
                 sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
+                print(sql)
                 dbcur.execute(sql)
             dbcon.commit()
-
+            
             sql1 = f"INSERT INTO {dbtable} "
             sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
             klimit = outdatedbarnumber + 1
             bars = client.klines(temp[1], temp[2], limit = klimit)
             for b in range(0,len(bars)):
                 arrayb = bars[b]
-                #print("arrayb",arrayb)
+                print("arrayb",arrayb)
                 # reshape arrayb
                 sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
