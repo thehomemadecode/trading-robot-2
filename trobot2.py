@@ -106,9 +106,11 @@ def db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename):
 
 def db_check(dbcon,client):
     dbcur = dbcon.cursor()
-    dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ;")
+    dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;")
     dbtables = [row[0] for row in dbcur.fetchall()]
     count = 0
+    progress = (len(dbtables))
+    progressc = 0
     for dbtable in dbtables:
         dbcur.execute(f"SELECT open_time FROM {dbtable} ORDER BY id DESC LIMIT 1")
         timedata = dbcur.fetchone()
@@ -117,32 +119,34 @@ def db_check(dbcon,client):
         bars = client.klines(temp[1], temp[2], limit = 1)   
         time2 = int((bars[0][0])/1000)
         fark = time2-time1
+        progressc += 1
         if (fark != 0):
             outdatedbarnumber = fark / timetable[temp[2]]
             outdatedbarnumber = int(outdatedbarnumber / 60)
             if (outdatedbarnumber>200):outdatedbarnumber=200
+            '''
             print(time.strftime("%Y-%m-%d %H:%M:%S"),end=": ")
             print(temp[1],temp[2],end=": ")
             print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time1)),end=" ")
             print(int(time1),end=" ")
             print(int(time2),end=" ")
             print(fark,outdatedbarnumber)
-            
+            '''
             dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
             last_records = dbcur.fetchall()
             for record in last_records:
                 sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
-                print(sql)
+                #print(sql)
                 dbcur.execute(sql)
-            dbcon.commit()
-            
+            #dbcon.commit()
+
             sql1 = f"INSERT INTO {dbtable} "
             sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
             klimit = outdatedbarnumber + 1
             bars = client.klines(temp[1], temp[2], limit = klimit)
             for b in range(0,len(bars)):
                 arrayb = bars[b]
-                print("arrayb",arrayb)
+                #print("arrayb",arrayb)
                 # reshape arrayb
                 sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
@@ -152,15 +156,18 @@ def db_check(dbcon,client):
                 dbcur.execute(sql)
             dbcon.commit()
             #print("")
-            
+        comp = round((100 * (progressc/progress)),1)
+        print(f"db_check: {comp}%\r",end="")
         count += 1
         #if (count == 6):break
+    print("")
     return 0
 
 def consistency_db_check(dbcon):
     dbcur = dbcon.cursor()
     dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ;")
     dbtables = [row[0] for row in dbcur.fetchall()]
+    failedtables = []
     for dbtable in dbtables:
         temp = [x for x in dbtable.split("_")]
         chkval = int(timetable[temp[2]]*60000)
@@ -168,7 +175,7 @@ def consistency_db_check(dbcon):
         opentimes = dbcur.fetchall()
         before = int(opentimes[0][1])
         opentimes.pop(0)
-        print(dbtable,"--> Check value:",chkval,"-->\t",end="")
+        #print(dbtable,"--> Check value:",chkval,"-->\t",end="\n")
         passcounter = len(opentimes)
         for ot in opentimes:
             after = int(ot[1])
@@ -176,12 +183,35 @@ def consistency_db_check(dbcon):
             br = False
             if (chkval != val):
                 print("Consistency check: FAILED ",dbtable,"\t id@",ot[0],after,before,chkval,val)
+                failedtables.append(dbtable)
                 br = True
             else:
                 passcounter -= 1
-                if (passcounter == 0):print("Consistency check: PASSED")
+                #if (passcounter == 0):print("Consistency check: PASSED")
             if (br):break
             before = after
+    return failedtables
+
+def refresh_failedtables(dbcon,failedtables,client):
+    dbcur = dbcon.cursor()
+    cols1 = "(id INTEGER PRIMARY KEY AUTOINCREMENT, open_time INTEGER, open TEXT, high TEXT, low TEXT, close TEXT, volume TEXT, close_time INTEGER, "    
+    cols2 = "quote_asset_volume TEXT, number_of_trades INTEGER, taker_base_volume TEXT, taker_quote_volume TEXT, unused TEXT)"    
+    sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
+    for dbtable in failedtables:
+        dbcur.execute("DROP TABLE IF EXISTS " + dbtable)
+        dbcon.commit()
+        dbcur.execute(f"CREATE TABLE IF NOT EXISTS {dbtable} {cols1}{cols2}")
+        temp = [x for x in dbtable.split("_")]
+        bars = client.klines(temp[1], temp[2], limit = 200)
+        sql1 = f"INSERT INTO {dbtable} "
+        for b in bars:
+            arrayb = b
+            # reshape arrayb
+            sql3 = ",".join(str(x) for x in arrayb)
+            sql = sql1+sql2+f"VALUES({sql3})"
+            dbcur.execute(sql)
+        dbcon.commit()
+        print(dbtable,"refresed.")
     return 0
 
 def main():
@@ -209,7 +239,8 @@ def main():
     
     client = Spot()
     temp = db_check(dbcon,client)
-    temp = consistency_db_check(dbcon)
+    failedtables = consistency_db_check(dbcon)
+    temp = refresh_failedtables(dbcon,failedtables,client)
     dbcon.close()
     
     #print(selecteddata)
@@ -231,4 +262,3 @@ def main():
 # most probably main
 if __name__ == '__main__':
     main()
-#test3
