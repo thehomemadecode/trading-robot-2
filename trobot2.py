@@ -123,7 +123,8 @@ def db_check(dbcon,client):
         if (fark != 0):
             outdatedbarnumber = fark / timetable[temp[2]]
             outdatedbarnumber = int(outdatedbarnumber / 60)
-            if (outdatedbarnumber>200):outdatedbarnumber=200
+            if (outdatedbarnumber>500):outdatedbarnumber=500
+# write a function delete older than kline500.
             '''
             print(time.strftime("%Y-%m-%d %H:%M:%S"),end=": ")
             print(temp[1],temp[2],end=": ")
