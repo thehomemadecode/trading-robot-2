@@ -3,10 +3,8 @@ name: Build C Extension Across Python Versions on Linux and Windows
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
     paths:
-      - trobot2module.c
+      - "trobot2module.c"
 jobs:
   build-linux:
     runs-on: ubuntu-latest
