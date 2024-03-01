@@ -5,6 +5,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    paths:
+      - trobot2module.c
 jobs:
   build-linux:
     runs-on: ubuntu-latest
