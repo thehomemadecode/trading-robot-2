@@ -80,7 +80,7 @@ def main():
         s += 1
         print("----",s,say,"-----------------------")
         #time.sleep(1)
-        if s==100:break # temporary limiter
+        if s==40:break # temporary limiter
     print(s)
     print(say)
     dbconnection.close()
