@@ -103,7 +103,40 @@ def func():
         time.sleep(3)
         if s==1:break # temporary limiter
 # -----------------------------------------------------------------------------------------------
+# Step 1: Define your functions
+def add(a, b):
+    return a + b
 
+def subtract(a, b):
+    return a - b
+
+def multiply(a, b):
+    return a * b
+
+# Step 2: Create a dictionary mapping string names to functions
+function_map = {
+    'add': add,
+    'subtract': subtract,
+    'multiply': multiply
+}
+
+# Step 3: Execute a function by its string name with parameters
+def execute_function(func_name, *args):
+    if func_name in function_map:
+        # Retrieve the function from the dictionary and call it with parameters
+        return function_map[func_name](*args)
+    else:
+        return "Function not found"
+
+# Example usage
+result_add = execute_function('add', 5, 3)
+print(f'Addition result: {result_add}')
+
+result_subtract = execute_function('subtract', 10, 4)
+print(f'Subtraction result: {result_subtract}')
+
+result_multiply = execute_function('multiply', 6, 7)
+print(f'Multiplication result: {result_multiply}')
 # -----------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------
