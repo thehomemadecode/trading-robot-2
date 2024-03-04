@@ -1,2 +1,4 @@
 binance-connector==3.2.0
 Cython==3.0.8
+websockets==10.4
+colorama==0.4.6
