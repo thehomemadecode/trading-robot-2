@@ -2,6 +2,17 @@ import sqlite3
 import trobot2 as tr
 from binance.spot import Spot
 import time
+import asyncio
+import websockets
+import json
+from datetime import datetime
+import multiprocessing
+from colorama import Fore, Back, Style
+from colorama import just_fix_windows_console
+import random
+
+FORES = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE ]
+STYLES = [ Style.DIM, Style.NORMAL, Style.BRIGHT ]
 
 # read config.ini
 def init_config(filename):
@@ -88,7 +99,7 @@ def db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename):
             #count = 0
             timetemp = data[len(data)-1][1]
             timedata = str(timetemp)
-            timedata = timedata[:-4]
+            timedata = timedata[:-3]
             rowdata = [symbol,graphtimeperiod,timedata]
             subrow = []
             for row in reversed(data):
@@ -211,8 +222,47 @@ def refresh_failedtables(dbcon,failedtables,client):
             sql = sql1+sql2+f"VALUES({sql3})"
             dbcur.execute(sql)
         dbcon.commit()
-        print(dbtable,"refresed.")
+        print(dbtable,"refreshed.")
     return 0
+
+# ----------------------------------------------------------------------------------------------
+async def get_data(data):
+    symbol = data[0].lower()
+    klinestarttimedata = int(data[2])
+    graphtimeperiod = data[1]
+    url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
+    async with websockets.connect(url) as websocket:
+        renk = random.sample(FORES,k=1)
+        stil = random.sample(STYLES,k=1)
+        renk = renk[0]
+        stil = stil[0]
+        data2 = ""
+        sayac = 0
+        while True:
+            data = await websocket.recv()
+            data = json.loads(data)
+            closeprice = data['k']['c']
+            klinestarttime = data['k']['t']
+            klinestarttime = int(klinestarttime/1000)
+            if (data2 != closeprice):
+                data2 = closeprice
+                timediff = klinestarttime-klinestarttimedata
+                print(renk+stil+f"{sayac}: [{datetime.now().isoformat()}] {symbol}: {closeprice} {klinestarttimedata} {klinestarttime} {timediff}")
+                sayac += 1
+                if (timediff != 0):
+                    print(f"{symbol} <-----------------------------------> break")
+                    break
+
+async def worker(selecteddata,s,f):
+    partedselecteddata = []
+    for i in range(s,f):
+        partedselecteddata.append(selecteddata[i])
+    tasks = [get_data(data) for data in partedselecteddata]
+    await asyncio.gather(*tasks)
+
+def dowork(selecteddata,s,f):
+    asyncio.run(worker(selecteddata,s,f))
+# ----------------------------------------------------------------------------------------------
 
 def main():
     # read configs
@@ -230,18 +280,40 @@ def main():
 
     fx = fxtypes[1]
     status = statustypes[1]
-    graphtimeperiod = graphtimeperiodlist[2]
+    graphtimeperiod = graphtimeperiodlist[0]
     
     allrules = init_rules(config['rules'])
 
     dbcon = dbconnect(dbfilename)
-    selecteddata = db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename)
-    
     client = Spot()
     temp = db_check(dbcon,client)
     failedtables = consistency_db_check(dbcon)
     temp = refresh_failedtables(dbcon,failedtables,client)
+    selecteddata = db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename)
     dbcon.close()
+
+    '''
+    for rowdata in selecteddata:
+        print(rowdata[0],rowdata[1],rowdata[2],rowdata[3][0])
+    exit()
+    '''
+    just_fix_windows_console()
+    p1 = multiprocessing.Process(target=dowork, args=(selecteddata,0,10))
+    p2 = multiprocessing.Process(target=dowork, args=(selecteddata,10,20))
+    p3 = multiprocessing.Process(target=dowork, args=(selecteddata,20,30))
+    p4 = multiprocessing.Process(target=dowork, args=(selecteddata,30,40))
+    p1.start()
+    p2.start()
+    p3.start()
+    p4.start()
+    p1.join()
+    p2.join()
+    p3.join()
+    p4.join()
+    p1.terminate()
+    p2.terminate()
+    p3.terminate()
+    p4.terminate()
     
     #print(selecteddata)
     '''
