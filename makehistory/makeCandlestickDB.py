@@ -40,7 +40,7 @@ def main():
     graphtimeperiodlist = ["5m", "1h", "1d"]
     prefix = "tr2"
     dbfilename = "candlestick.db"
-    limit = 100
+    limit = 40
     
     # show infos
     file = open(filename, "r")
