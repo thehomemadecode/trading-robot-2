@@ -30,6 +30,7 @@ def init_config(filename):
     file.close()
     return config
 
+# read rules from config.ini
 def init_rules(config_rules):
     allrules = []
     for item in config_rules:
@@ -165,13 +166,13 @@ def db_check(dbcon,client):
                 time3 = int(bars[b][0]/1000)
                 #print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time3)),end=" ")
                 dbcur.execute(sql)
-            dbcon.commit()
             #print("")
         comp = round((100 * (progressc/progress)),1)
         print(f"db_check: {comp}%\r",end="")
         count += 1
         #if (count == 6):break
     print("")
+    dbcon.commit()
     return 0
 
 def consistency_db_check(dbcon):
@@ -226,42 +227,52 @@ def refresh_failedtables(dbcon,failedtables,client):
     return 0
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(data):
+async def get_data(client,baseurl,data):
+    renk = random.sample(FORES,k=1)
+    stil = random.sample(STYLES,k=1)
+    renk = renk[0]
+    stil = stil[0]    
+    barsymbol = data[0]
     symbol = data[0].lower()
     klinestarttimedata = int(data[2])
     graphtimeperiod = data[1]
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
-    async with websockets.connect(url) as websocket:
-        renk = random.sample(FORES,k=1)
-        stil = random.sample(STYLES,k=1)
-        renk = renk[0]
-        stil = stil[0]
+    async with websockets.connect(url,max_queue=1) as websocket:
         data2 = ""
         sayac = 0
         while True:
             data = await websocket.recv()
             data = json.loads(data)
             closeprice = data['k']['c']
-            klinestarttime = data['k']['t']
-            klinestarttime = int(klinestarttime/1000)
+            websocketklineopentime = data['k']['t']
+            websocketklineopentime = int(websocketklineopentime/1000)
             if (data2 != closeprice):
                 data2 = closeprice
-                timediff = klinestarttime-klinestarttimedata
-                print(renk+stil+f"{sayac}: [{datetime.now().isoformat()}] {symbol}: {closeprice} {klinestarttimedata} {klinestarttime} {timediff}")
+                timediff = websocketklineopentime-klinestarttimedata
+                timestr = datetime.now().isoformat()[11:23]
+                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{timediff}")
                 sayac += 1
                 if (timediff != 0):
-                    print(f"{symbol} <-----------------------------------> break")
-                    break
+                    bars = await get_klines(baseurl, barsymbol, graphtimeperiod)
+                    klinestarttimedata = int(bars[0][0]/1000)
+                    #print(f"{symbol} {bars} <-----------------------------------> break")
+                    #break
 
-async def worker(selecteddata,s,f):
+async def get_klines(baseurl, barsymbol, graphtimeperiod):
+    from binance.spot import Spot as Clientws
+    clientws = Clientws(base_url=baseurl)
+    bars = clientws.klines(barsymbol, graphtimeperiod, limit = 1)
+    return bars
+
+async def worker(client,baseurl,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(data) for data in partedselecteddata]
+    tasks = [get_data(client,baseurl,data) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(selecteddata,s,f):
-    asyncio.run(worker(selecteddata,s,f))
+def dowork(client,baseurl,selecteddata,s,f):
+    asyncio.run(worker(client,baseurl,selecteddata,s,f))
 # ----------------------------------------------------------------------------------------------
 
 def main():
@@ -298,10 +309,14 @@ def main():
     exit()
     '''
     just_fix_windows_console()
-    p1 = multiprocessing.Process(target=dowork, args=(selecteddata,0,10))
-    p2 = multiprocessing.Process(target=dowork, args=(selecteddata,10,20))
-    p3 = multiprocessing.Process(target=dowork, args=(selecteddata,20,30))
-    p4 = multiprocessing.Process(target=dowork, args=(selecteddata,30,40))
+    baseurl = "https://api.binance.com"
+    p1 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,0,50))
+    baseurl = "https://api1.binance.com"
+    p2 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,50,100))
+    baseurl = "https://api2.binance.com"
+    p3 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,100,150))
+    baseurl = "https://api.binance.com"
+    p4 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,150,200))
     p1.start()
     p2.start()
     p3.start()
