@@ -1,5 +1,9 @@
 import sqlite3
 
+def dbconnect(dbfilename):
+    dbconnection = sqlite3.connect(dbfilename)
+    return dbconnection
+
 # Be careful, all data will be ERASED if present.
 def sqlite3ClearCreate(dbfilename):
     dbconnection = sqlite3.connect(dbfilename)
@@ -11,10 +15,6 @@ def sqlite3ClearCreate(dbfilename):
         dbcursor.execute("DROP TABLE IF EXISTS " + dbtable)
     dbconnection.commit()
     dbconnection.close()
-    
-def dbconnect(dbfilename):
-    dbconnection = sqlite3.connect(dbfilename)
-    return dbconnection
 
 def makeTables(dbconnection,symbollist,graphtimeperiodlist,prefix,limit):
     cols1 = "(id INTEGER PRIMARY KEY AUTOINCREMENT, open_time INTEGER, open TEXT, high TEXT, low TEXT, close TEXT, volume TEXT, close_time INTEGER, "
@@ -65,7 +65,7 @@ def main():
     dbc = dbconnect(dbfilename)
     makeTables(dbc,symbollist,graphtimeperiodlist,prefix,limit)
 
-
 # most probably main
 if __name__ == '__main__':
     main()
+    
