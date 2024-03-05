@@ -73,8 +73,6 @@ def main():
                 #print(sql3)
                 sql = sql1+sql2+f"VALUES({sql3})"
                 dbcursor.execute(sql)
-            dbconnection.commit()
-            
             #symbolTable[1][i].append(bars)
             #i += 1
         s += 1
@@ -83,6 +81,7 @@ def main():
         if s==40:break # temporary limiter
     print(s)
     print(say)
+    dbconnection.commit()
     dbconnection.close()
     '''
     print(symbolTable)
