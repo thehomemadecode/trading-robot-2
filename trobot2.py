@@ -310,13 +310,13 @@ def main():
     '''
     just_fix_windows_console()
     baseurl = "https://api.binance.com"
-    p1 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,0,50))
+    p1 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,0,10))
     baseurl = "https://api1.binance.com"
-    p2 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,50,100))
+    p2 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,10,20))
     baseurl = "https://api2.binance.com"
-    p3 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,100,150))
-    baseurl = "https://api.binance.com"
-    p4 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,150,200))
+    p3 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,20,30))
+    baseurl = "https://api3.binance.com"
+    p4 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,30,40))
     p1.start()
     p2.start()
     p3.start()
