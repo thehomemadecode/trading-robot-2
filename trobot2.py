@@ -238,7 +238,7 @@ def refresh_failedtables(dbcon,failedtables,client):
     return 0
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(client,baseurl,data):
+async def get_data(baseurl,data):
     renk = random.sample(FORES,k=1)
     stil = random.sample(STYLES,k=1)
     renk = renk[0]
@@ -275,15 +275,15 @@ async def get_klines(baseurl, barsymbol, graphtimeperiod):
     bars = clientws.klines(barsymbol, graphtimeperiod, limit = 1)
     return bars
 
-async def worker(client,baseurl,selecteddata,s,f):
+async def worker(baseurl,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(client,baseurl,data) for data in partedselecteddata]
+    tasks = [get_data(baseurl,data) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(client,baseurl,selecteddata,s,f):
-    asyncio.run(worker(client,baseurl,selecteddata,s,f))
+def dowork(baseurl,selecteddata,s,f):
+    asyncio.run(worker(baseurl,selecteddata,s,f))
 # ----------------------------------------------------------------------------------------------
 
 def main():
