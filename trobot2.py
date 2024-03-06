@@ -212,7 +212,6 @@ def consistency_db_check(dbcon):
                 passcounter -= 1
                 #if (passcounter == 0):print("Consistency check: PASSED")
             if (br):break
-            intercheckbefore = before
             before = after
     return failedtables
 
