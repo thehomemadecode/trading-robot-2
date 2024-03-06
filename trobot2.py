@@ -10,6 +10,7 @@ import multiprocessing
 from colorama import Fore, Back, Style
 from colorama import just_fix_windows_console
 import random
+from math import ceil
 
 FORES = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE ]
 STYLES = [ Style.DIM, Style.NORMAL, Style.BRIGHT ]
@@ -124,17 +125,27 @@ def db_check(dbcon,client):
     progress = (len(dbtables))
     progressc = 0
     for dbtable in dbtables:
+        '''
         dbcur.execute(f"SELECT open_time FROM {dbtable} ORDER BY id DESC LIMIT 1")
         timedata = dbcur.fetchone()
         time1 = int(timedata[0]/1000)
         temp = [x for x in dbtable.split("_")]
         bars = client.klines(temp[1], temp[2], limit = 1)   
         time2 = int((bars[0][0])/1000)
+        '''
+        dbcur.execute(f"SELECT close_time FROM {dbtable} ORDER BY id DESC LIMIT 1")
+        timedata = dbcur.fetchone()
+        time1 = int(timedata[0]/1000)
+        temp = [x for x in dbtable.split("_")]
+        stime = client.time()
+        time2 = int(stime['serverTime']/1000)
+        #'''
         fark = time2-time1
         progressc += 1
-        if (fark != 0):
-            outdatedbarnumber = fark / timetable[temp[2]]
-            outdatedbarnumber = int(outdatedbarnumber / 60)
+        #if (fark != 0):
+        if (fark >= 0):
+            outdatedbarnumber = (fark / (timetable[temp[2]]*60))
+            outdatedbarnumber = int(ceil(outdatedbarnumber))
             if (outdatedbarnumber>500):outdatedbarnumber=500 # write a function delete older than kline500.
             '''
             print(time.strftime("%Y-%m-%d %H:%M:%S"),end=": ")
@@ -150,7 +161,7 @@ def db_check(dbcon,client):
                 sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
                 #print(sql)
                 dbcur.execute(sql)
-            #dbcon.commit()
+            dbcon.commit()
 
             sql1 = f"INSERT INTO {dbtable} "
             sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
@@ -166,13 +177,13 @@ def db_check(dbcon,client):
                 time3 = int(bars[b][0]/1000)
                 #print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time3)),end=" ")
                 dbcur.execute(sql)
+            dbcon.commit()
             #print("")
         comp = round((100 * (progressc/progress)),1)
-        print(f"db_check: {comp}%\r",end="")
+        print(f"db_check: {comp}%",dbtable,time1-time2,"                 \r",end="")
         count += 1
         #if (count == 6):break
     print("")
-    dbcon.commit()
     return 0
 
 def consistency_db_check(dbcon):
@@ -201,6 +212,7 @@ def consistency_db_check(dbcon):
                 passcounter -= 1
                 #if (passcounter == 0):print("Consistency check: PASSED")
             if (br):break
+            intercheckbefore = before
             before = after
     return failedtables
 
@@ -222,8 +234,8 @@ def refresh_failedtables(dbcon,failedtables,client):
             sql3 = ",".join(str(x) for x in arrayb)
             sql = sql1+sql2+f"VALUES({sql3})"
             dbcur.execute(sql)
-        dbcon.commit()
         print(dbtable,"refreshed.")
+    dbcon.commit()
     return 0
 
 # ----------------------------------------------------------------------------------------------
@@ -308,6 +320,7 @@ def main():
         print(rowdata[0],rowdata[1],rowdata[2],rowdata[3][0])
     exit()
     '''
+    '''
     just_fix_windows_console()
     baseurl = "https://api.binance.com"
     p1 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,0,10))
@@ -329,7 +342,7 @@ def main():
     p2.terminate()
     p3.terminate()
     p4.terminate()
-    
+    '''
     #print(selecteddata)
     '''
     col = letter_to_number(ohlvcq)
