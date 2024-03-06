@@ -263,6 +263,7 @@ async def get_data(baseurl,data):
                 timestr = datetime.now().isoformat()[11:23]
                 print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{timediff}")
                 sayac += 1
+                if (sayac>9):break
                 if (timediff != 0):
                     bars = await get_klines(baseurl, barsymbol, graphtimeperiod)
                     klinestarttimedata = int(bars[0][0]/1000)
@@ -314,21 +315,15 @@ def main():
     selecteddata = db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename)
     dbcon.close()
 
-    '''
-    for rowdata in selecteddata:
-        print(rowdata[0],rowdata[1],rowdata[2],rowdata[3][0])
-    exit()
-    '''
-    '''
     just_fix_windows_console()
     baseurl = "https://api.binance.com"
-    p1 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,0,10))
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,0,10))
     baseurl = "https://api1.binance.com"
-    p2 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,10,20))
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,10,20))
     baseurl = "https://api2.binance.com"
-    p3 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,20,30))
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,20,30))
     baseurl = "https://api3.binance.com"
-    p4 = multiprocessing.Process(target=dowork, args=(client,baseurl,selecteddata,30,40))
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,30,40))
     p1.start()
     p2.start()
     p3.start()
@@ -341,8 +336,7 @@ def main():
     p2.terminate()
     p3.terminate()
     p4.terminate()
-    '''
-    #print(selecteddata)
+
     '''
     col = letter_to_number(ohlvcq)
     for rowdata in selecteddata:
