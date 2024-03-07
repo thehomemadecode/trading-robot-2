@@ -268,7 +268,7 @@ async def get_data(baseurl,dbcon,data):
                 else:
                     klinechangedmessage="-"
                 sayac += 1
-                if (sayac>3):break
+                if (sayac>1):break
                 if (timediff != 0):
                     dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                     dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -292,7 +292,10 @@ async def get_data(baseurl,dbcon,data):
                         sql = sql1+sql2+f"VALUES({sql3})"
                         dbcur.execute(sql)
                     dbcon.commit()
-                    #print(f"{symbol} <-----------------------------------> break")
+                    # start ---- > trobot module C < ----------------------------------------------------
+                    allrules = init_rules(config['rules'])
+                    result = tr.cryptocurrencyGate(data,3,allrules)
+                    # end ------ > trobot module C < ----------------------------------------------------
                 print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{klinechangedmessage}")
         print("that's all folks:",symbol)
 
@@ -333,8 +336,6 @@ def main():
     fx = fxtypes[1]
     status = statustypes[1]
     graphtimeperiod = graphtimeperiodlist[0]
-    
-    allrules = init_rules(config['rules'])
 
     dbcon = dbconnect(dbfilename)
     client = Spot()
