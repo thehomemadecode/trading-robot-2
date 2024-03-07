@@ -238,7 +238,7 @@ def refresh_failedtables(dbcon,failedtables,client):
     return 0
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,data):
+async def get_data(baseurl,dbcon,data):
     renk = random.sample(FORES,k=1)
     stil = random.sample(STYLES,k=1)
     renk = renk[0]
@@ -248,6 +248,7 @@ async def get_data(baseurl,data):
     klinestarttimedata = int(data[2])
     graphtimeperiod = data[1]
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
+    dbcur = dbcon.cursor()
     async with websockets.connect(url,max_queue=1) as websocket:
         data2 = ""
         sayac = 0
@@ -261,30 +262,53 @@ async def get_data(baseurl,data):
                 data2 = closeprice
                 timediff = websocketklineopentime-klinestarttimedata
                 timestr = datetime.now().isoformat()[11:23]
-                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{timediff}")
+                #print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{timediff}\t{timetable[graphtimeperiod]}")
+                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}\t{closeprice}")
                 sayac += 1
-                if (sayac>9):break
+                if (sayac>50):break
                 if (timediff != 0):
-                    bars = await get_klines(baseurl, barsymbol, graphtimeperiod)
-                    klinestarttimedata = int(bars[0][0]/1000)
-                    #print(f"{symbol} {bars} <-----------------------------------> break")
-                    #break
+                    prefix = "tr2"
+                    dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
+                    dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
+                    last_records = dbcur.fetchall()
+                    for record in last_records:
+                        sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
+                        #print(sql)
+                        dbcur.execute(sql)
+                    dbcon.commit()
+                    
+                    klimit = int(timediff/(timetable[graphtimeperiod]*60))
+                    klimit += 1
+                    bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
+                    sql1 = f"INSERT INTO {dbtable} "
+                    sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
+                    for bar in bars:
+                        klinestarttimedata = int(bar[0]/1000)
+                        arrayb = bar
+                        # reshape arrayb
+                        sql3 = ",".join(str(x) for x in arrayb)
+                        sql = sql1+sql2+f"VALUES({sql3})"
+                        dbcur.execute(sql)
+                    dbcon.commit()
+                    #print(f"{symbol} <-----------------------------------> break")
 
-async def get_klines(baseurl, barsymbol, graphtimeperiod):
+async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     from binance.spot import Spot as Clientws
     clientws = Clientws(base_url=baseurl)
-    bars = clientws.klines(barsymbol, graphtimeperiod, limit = 1)
+    bars = clientws.klines(barsymbol, graphtimeperiod, limit = klimit)
     return bars
 
-async def worker(baseurl,selecteddata,s,f):
+async def worker(baseurl,dbcon,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,data) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,data) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(baseurl,selecteddata,s,f):
-    asyncio.run(worker(baseurl,selecteddata,s,f))
+def dowork(baseurl,dbfilename,selecteddata,s,f):
+    dbcon = dbconnect(dbfilename)
+    asyncio.run(worker(baseurl,dbcon,selecteddata,s,f))
+    dbcon.close()
 # ----------------------------------------------------------------------------------------------
 
 def main():
@@ -298,6 +322,7 @@ def main():
 
     alldatafilename = config['trobot Inputs']['alldatafilename']
     dbfilename = config['trobot Inputs']['dbfilename']
+    global prefix
     prefix = config['trobot Inputs']['prefix']
     ohlvcq = config['trobot Inputs']['ohlvcq']
 
@@ -314,16 +339,16 @@ def main():
     temp = refresh_failedtables(dbcon,failedtables,client)
     selecteddata = db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename)
     dbcon.close()
-
+    
     just_fix_windows_console()
     baseurl = "https://api.binance.com"
-    p1 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,0,10))
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,0,10))
     baseurl = "https://api1.binance.com"
-    p2 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,10,20))
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,10,20))
     baseurl = "https://api2.binance.com"
-    p3 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,20,30))
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,20,30))
     baseurl = "https://api3.binance.com"
-    p4 = multiprocessing.Process(target=dowork, args=(baseurl,selecteddata,30,40))
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,30,40))
     p1.start()
     p2.start()
     p3.start()
