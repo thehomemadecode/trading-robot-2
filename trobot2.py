@@ -262,10 +262,13 @@ async def get_data(baseurl,dbcon,data):
                 data2 = closeprice
                 timediff = websocketklineopentime-klinestarttimedata
                 timestr = datetime.now().isoformat()[11:23]
-                #print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{timediff}\t{timetable[graphtimeperiod]}")
-                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}\t{closeprice}")
+                if (timediff > 0):
+                    klinechangedmessage="kline is changed."
+                else:
+                    klinechangedmessage="-"
+                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{klinechangedmessage}")
                 sayac += 1
-                if (sayac>50):break
+                if (sayac>10):break
                 if (timediff != 0):
                     prefix = "tr2"
                     dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
