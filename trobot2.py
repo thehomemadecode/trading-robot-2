@@ -50,6 +50,7 @@ def dateconvert(date):
 
 timetable = {
     "1m" :1,
+    "3m" :3,
     "5m" :5,
     "15m":15,
     "1h" :60,
@@ -180,7 +181,7 @@ def db_check(dbcon,client):
             dbcon.commit()
             #print("")
         comp = round((100 * (progressc/progress)),1)
-        print(f"db_check: {comp}%",dbtable,time1-time2,"                 \r",end="")
+        print(f"db_check: {comp}%",dbtable,time1-time2,"          \r",end="")
         count += 1
         #if (count == 6):break
     print("")
@@ -263,14 +264,12 @@ async def get_data(baseurl,dbcon,data):
                 timediff = websocketklineopentime-klinestarttimedata
                 timestr = datetime.now().isoformat()[11:23]
                 if (timediff > 0):
-                    klinechangedmessage="kline is changed."
+                    klinechangedmessage=f"kline is changed: {timediff}"
                 else:
                     klinechangedmessage="-"
-                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{klinechangedmessage}")
                 sayac += 1
-                if (sayac>10):break
+                if (sayac>3):break
                 if (timediff != 0):
-                    prefix = "tr2"
                     dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                     dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
                     last_records = dbcur.fetchall()
@@ -294,6 +293,8 @@ async def get_data(baseurl,dbcon,data):
                         dbcur.execute(sql)
                     dbcon.commit()
                     #print(f"{symbol} <-----------------------------------> break")
+                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{klinechangedmessage}")
+        print("that's all folks:",symbol)
 
 async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     from binance.spot import Spot as Clientws

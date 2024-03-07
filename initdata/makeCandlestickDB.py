@@ -1,5 +1,21 @@
 import sqlite3
 
+# read config.ini
+def init_config(filename):
+    config = {}
+    current_section = None
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith('[') and line.endswith(']'):
+                current_section = line[1:-1]
+                config[current_section] = {}
+            elif '=' in line and current_section and not line.startswith('#'):
+                key, value = line.split('=')
+                config[current_section][key.strip()] = value.strip()
+    file.close()
+    return config
+
 def dbconnect(dbfilename):
     dbconnection = sqlite3.connect(dbfilename)
     return dbconnection
@@ -29,21 +45,24 @@ def makeTables(dbconnection,symbollist,graphtimeperiodlist,prefix,limit):
     dbconnection.close()
 
 def main():
+    # read configs
+    filename = "config.ini"
+    config = init_config(filename)
+
     # settings const
-    fxtypes = ["ALL", "USDT", "TUSD", "USDC", "BTC", "ETH"]
-    statustypes = ["ALL", "TRADING", "BREAK"]
+    fxtypes = eval(config['trobot Inputs']['fxtypes'])
+    statustypes = eval(config['trobot Inputs']['statustypes'])
     # settings vars
-    filename = "alldata.txt"
+    alldatafilename = config['trobot Inputs']['alldatafilename']
     fx = fxtypes[1]
     status = statustypes[1]
-    #graphtimeperiodlist = ["1s", "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"]
-    graphtimeperiodlist = ["5m"]
-    prefix = "tr2"
-    dbfilename = "candlestick.db"
-    limit = 40
+    graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
+    prefix = config['trobot Inputs']['prefix']
+    dbfilename = config['trobot Inputs']['dbfilename']
+    limit = int(config['trobot Inputs']['assetlimit'])
     
     # show infos
-    file = open(filename, "r")
+    file = open(alldatafilename, "r")
     for content in file:
         temp = content
     file.close()
