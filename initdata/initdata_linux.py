@@ -7,7 +7,7 @@ def main():
 
     cmd4 = 'cp alldata.txt ../.'
     cmd5 = 'cp candlestick.db ../.'
-    cmd6 = 'cp config.txt ../.'
+    cmd6 = 'cp config.ini ../.'
 
     os.system(cmd1)
     os.system(cmd2)
