@@ -74,76 +74,21 @@ def dbconnect(dbfilename):
     dbcon = sqlite3.connect(dbfilename)
     return dbcon
 
-def db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename):
-    alldatafile = open(alldatafilename, "r")
-    for line in alldatafile:
-        content = line
-    alldatafile.close()
-    alldata = eval(content)
-    symbollist = []
-    for i in alldata['symbols']:
-        if fx == "ALL" and status == "ALL":
-            symbollist.append(i['symbol'])
-        elif fx == "ALL" and status != "ALL":
-            if status == i['status']:
-                symbollist.append(i['symbol'])
-        elif fx != "ALL" and status == "ALL":
-            if fx == i['symbol'][-(len(fx)):]:
-                symbollist.append(i['symbol'])
-        elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
-            symbollist.append(i['symbol'])
-
-    selecteddata = []
-    for symbol in symbollist:
-        try:
-            dbcur = dbcon.cursor()
-            dbcur.execute(f"SELECT * FROM {prefix}_{symbol}_{graphtimeperiod}")
-            data = dbcur.fetchall()
-            #count = 0
-            timetemp = data[len(data)-1][1]
-            timedata = str(timetemp)
-            timedata = timedata[:-3]
-            rowdata = [symbol,graphtimeperiod,timedata]
-            subrow = []
-            for row in reversed(data):
-                subrow += [[row[2], row[3], row[4], row[5], row[6], row[8]]]
-                #count += 1
-                #if (count == 2):break
-            rowdata.append(subrow)
-            selecteddata.append(rowdata)
-        except Exception as err:
-            pass
-            #import sys
-            #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
-            #print(type(err).__name__, err)
-    return selecteddata
-
 def db_check(dbcon,client):
     dbcur = dbcon.cursor()
     dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;")
     dbtables = [row[0] for row in dbcur.fetchall()]
-    count = 0
     progress = (len(dbtables))
     progressc = 0
     for dbtable in dbtables:
-        '''
-        dbcur.execute(f"SELECT open_time FROM {dbtable} ORDER BY id DESC LIMIT 1")
-        timedata = dbcur.fetchone()
-        time1 = int(timedata[0]/1000)
-        temp = [x for x in dbtable.split("_")]
-        bars = client.klines(temp[1], temp[2], limit = 1)   
-        time2 = int((bars[0][0])/1000)
-        '''
         dbcur.execute(f"SELECT close_time FROM {dbtable} ORDER BY id DESC LIMIT 1")
         timedata = dbcur.fetchone()
         time1 = int(timedata[0]/1000)
         temp = [x for x in dbtable.split("_")]
         stime = client.time()
         time2 = int(stime['serverTime']/1000)
-        #'''
         fark = time2-time1
         progressc += 1
-        #if (fark != 0):
         if (fark >= 0):
             outdatedbarnumber = (fark / (timetable[temp[2]]*60))
             outdatedbarnumber = int(ceil(outdatedbarnumber))
@@ -182,8 +127,6 @@ def db_check(dbcon,client):
             #print("")
         comp = round((100 * (progressc/progress)),1)
         print(f"db_check: {comp}%",dbtable,time1-time2,"          \r",end="")
-        count += 1
-        #if (count == 6):break
     print("")
     return 0
 
@@ -237,6 +180,47 @@ def refresh_failedtables(dbcon,failedtables,client,maxklines):
         print(dbtable,"refreshed.")
     dbcon.commit()
     return 0
+
+def db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename):
+    alldatafile = open(alldatafilename, "r")
+    for line in alldatafile:
+        content = line
+    alldatafile.close()
+    alldata = eval(content)
+    symbollist = []
+    for i in alldata['symbols']:
+        if fx == "ALL" and status == "ALL":
+            symbollist.append(i['symbol'])
+        elif fx == "ALL" and status != "ALL":
+            if status == i['status']:
+                symbollist.append(i['symbol'])
+        elif fx != "ALL" and status == "ALL":
+            if fx == i['symbol'][-(len(fx)):]:
+                symbollist.append(i['symbol'])
+        elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
+            symbollist.append(i['symbol'])
+
+    selecteddata = []
+    for symbol in symbollist:
+        try:
+            dbcur = dbcon.cursor()
+            dbcur.execute(f"SELECT * FROM {prefix}_{symbol}_{graphtimeperiod}")
+            data = dbcur.fetchall()
+            timetemp = data[len(data)-1][1]
+            timedata = str(timetemp)
+            timedata = timedata[:-3]
+            rowdata = [symbol,graphtimeperiod,timedata]
+            subrow = []
+            for row in reversed(data):
+                subrow += [[row[2], row[3], row[4], row[5], row[6], row[8]]]
+            rowdata.append(subrow)
+            selecteddata.append(rowdata)
+        except Exception as err:
+            pass
+            #import sys
+            #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
+            #print(type(err).__name__, err)
+    return selecteddata
 
 # ----------------------------------------------------------------------------------------------
 async def get_data(baseurl,dbcon,prefix,data):
@@ -301,7 +285,7 @@ async def get_data(baseurl,dbcon,prefix,data):
                         sql = sql1+sql2+f"VALUES({sql3})"
                         dbcur.execute(sql)
                     dbcon.commit()
-                    # start ---- > trobot module C < ----------------------------------------------------
+                    # start ---- > trobot C module < ----------------------------------------------------
                     '''
                     filename = "config.ini"
                     config = init_config(filename)
@@ -312,7 +296,7 @@ async def get_data(baseurl,dbcon,prefix,data):
                     print(resc)
                     print(resc2)
                     '''
-                    # end ------ > trobot module C < ----------------------------------------------------
+                    # end ------ > trobot C module < ----------------------------------------------------
                 print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}")
         print(f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
 
