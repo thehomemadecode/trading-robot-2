@@ -1,6 +1,17 @@
 #include <Python.h>
 #include <stdio.h>
 
+static PyObject *cryptocurrencyGateA(PyObject *self, PyObject *args) {
+	PyObject* data;
+	int col;
+	if (!PyArg_ParseTuple(args, "Oi", &data, &col)) {
+		return NULL;
+	}
+	PyObject* datareturn;
+	datareturn = data;
+	return Py_BuildValue("O", datareturn);
+}
+
 static PyObject *cryptocurrencyGate(PyObject *self, PyObject *args) {
 	PyObject* selecteddata;
 	int col;
@@ -70,6 +81,7 @@ static PyObject *sma(PyObject *self, PyObject *args) {
 
 static PyMethodDef trobot2Methods[] = {
     {"cryptocurrencyGate", cryptocurrencyGate, METH_VARARGS, "cryptocurrencyGate"},
+	{"cryptocurrencyGateA", cryptocurrencyGateA, METH_VARARGS, "cryptocurrencyGateA"},
     {"check", check, METH_VARARGS, "check"},	
     {"sma", sma, METH_VARARGS, "Simple moving average"},
     {NULL, NULL, 0, NULL}

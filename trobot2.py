@@ -216,7 +216,7 @@ def consistency_db_check(dbcon):
             before = after
     return failedtables
 
-def refresh_failedtables(dbcon,failedtables,client):
+def refresh_failedtables(dbcon,failedtables,client,maxklines):
     dbcur = dbcon.cursor()
     cols1 = "(id INTEGER PRIMARY KEY AUTOINCREMENT, open_time INTEGER, open TEXT, high TEXT, low TEXT, close TEXT, volume TEXT, close_time INTEGER, "    
     cols2 = "quote_asset_volume TEXT, number_of_trades INTEGER, taker_base_volume TEXT, taker_quote_volume TEXT, unused TEXT)"    
@@ -226,7 +226,7 @@ def refresh_failedtables(dbcon,failedtables,client):
         dbcon.commit()
         dbcur.execute(f"CREATE TABLE IF NOT EXISTS {dbtable} {cols1}{cols2}")
         temp = [x for x in dbtable.split("_")]
-        bars = client.klines(temp[1], temp[2], limit = 200)
+        bars = client.klines(temp[1], temp[2], limit = maxklines)
         sql1 = f"INSERT INTO {dbtable} "
         for b in bars:
             arrayb = b
@@ -239,7 +239,16 @@ def refresh_failedtables(dbcon,failedtables,client):
     return 0
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,dbcon,data):
+async def get_data(baseurl,dbcon,prefix,data):
+    # debug start
+    '''
+    print(type(data))
+    print(data[0],data[1],data[2])
+    for d in data[3]:
+        print(d[3])
+    print("------------------------------------------------------")
+    '''
+    # debug end
     renk = random.sample(FORES,k=1)
     stil = random.sample(STYLES,k=1)
     renk = renk[0]
@@ -251,16 +260,16 @@ async def get_data(baseurl,dbcon,data):
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
     dbcur = dbcon.cursor()
     async with websockets.connect(url,max_queue=1) as websocket:
-        data2 = ""
+        olddata = ""
         sayac = 0
         while True:
-            data = await websocket.recv()
-            data = json.loads(data)
-            closeprice = data['k']['c']
-            websocketklineopentime = data['k']['t']
+            newdata = await websocket.recv()
+            newdata = json.loads(newdata)
+            closeprice = newdata['k']['c']
+            websocketklineopentime = newdata['k']['t']
             websocketklineopentime = int(websocketklineopentime/1000)
-            if (data2 != closeprice):
-                data2 = closeprice
+            if (olddata != closeprice):
+                olddata = closeprice
                 timediff = websocketklineopentime-klinestarttimedata
                 timestr = datetime.now().isoformat()[11:23]
                 if (timediff > 0):
@@ -268,7 +277,7 @@ async def get_data(baseurl,dbcon,data):
                 else:
                     klinechangedmessage="-"
                 sayac += 1
-                if (sayac>1):break
+                if (sayac>1):break # stop 
                 if (timediff != 0):
                     dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                     dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -293,11 +302,19 @@ async def get_data(baseurl,dbcon,data):
                         dbcur.execute(sql)
                     dbcon.commit()
                     # start ---- > trobot module C < ----------------------------------------------------
+                    '''
+                    filename = "config.ini"
+                    config = init_config(filename)
                     allrules = init_rules(config['rules'])
-                    result = tr.cryptocurrencyGate(data,3,allrules)
+                    resc = tr.check(3)
+                    datasend = eval(data)
+                    resc2 = tr.cryptocurrencyGateA(datasend,3)
+                    print(resc)
+                    print(resc2)
+                    '''
                     # end ------ > trobot module C < ----------------------------------------------------
-                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:\t{closeprice}\t{klinechangedmessage}")
-        print("that's all folks:",symbol)
+                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}")
+        print(f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
 
 async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     from binance.spot import Spot as Clientws
@@ -305,16 +322,16 @@ async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     bars = clientws.klines(barsymbol, graphtimeperiod, limit = klimit)
     return bars
 
-async def worker(baseurl,dbcon,selecteddata,s,f):
+async def worker(baseurl,dbcon,prefix,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,dbcon,data) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,prefix,data) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(baseurl,dbfilename,selecteddata,s,f):
+def dowork(baseurl,dbfilename,prefix,selecteddata,s,f):
     dbcon = dbconnect(dbfilename)
-    asyncio.run(worker(baseurl,dbcon,selecteddata,s,f))
+    asyncio.run(worker(baseurl,dbcon,prefix,selecteddata,s,f))
     dbcon.close()
 # ----------------------------------------------------------------------------------------------
 
@@ -329,10 +346,10 @@ def main():
 
     alldatafilename = config['trobot Inputs']['alldatafilename']
     dbfilename = config['trobot Inputs']['dbfilename']
-    global prefix
     prefix = config['trobot Inputs']['prefix']
     ohlvcq = config['trobot Inputs']['ohlvcq']
-
+    maxklines = int(config['trobot Inputs']['maxklines'])
+    
     fx = fxtypes[1]
     status = statustypes[1]
     graphtimeperiod = graphtimeperiodlist[0]
@@ -341,19 +358,19 @@ def main():
     client = Spot()
     temp = db_check(dbcon,client)
     failedtables = consistency_db_check(dbcon)
-    temp = refresh_failedtables(dbcon,failedtables,client)
+    temp = refresh_failedtables(dbcon,failedtables,client,maxklines)
     selecteddata = db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename)
     dbcon.close()
     
     just_fix_windows_console()
     baseurl = "https://api.binance.com"
-    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,0,10))
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,0,10))
     baseurl = "https://api1.binance.com"
-    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,10,20))
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,10,20))
     baseurl = "https://api2.binance.com"
-    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,20,30))
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,20,30))
     baseurl = "https://api3.binance.com"
-    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,30,40))
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,30,40))
     p1.start()
     p2.start()
     p3.start()

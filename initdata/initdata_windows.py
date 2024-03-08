@@ -7,6 +7,7 @@ def main():
 
     cmd4 = 'copy alldata.txt ..\.'
     cmd5 = 'copy candlestick.db ..\.'
+    cmd6 = 'cp config.txt ..\.'
 
     os.system(cmd1)
     os.system(cmd2)
@@ -14,6 +15,7 @@ def main():
 
     os.system(cmd4)
     os.system(cmd5)
+    os.system(cmd6)
 
 # most probably main
 if __name__ == '__main__':

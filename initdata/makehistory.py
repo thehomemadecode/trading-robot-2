@@ -45,6 +45,7 @@ def main():
     graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
     prefix = config['trobot Inputs']['prefix']
     dbfilename = config['trobot Inputs']['dbfilename']
+    limit = int(config['trobot Inputs']['assetlimit'])
 
     # connect binance
     client = Spot()
@@ -97,7 +98,7 @@ def main():
         s += 1
         print("----",s,say,"-----------------------")
         #time.sleep(1)
-        if s==40:break # temporary limiter
+        if s==limit:break # temporary limiter
     print(s)
     print(say)
     dbconnection.commit()
