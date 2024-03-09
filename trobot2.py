@@ -10,7 +10,7 @@ import multiprocessing
 from colorama import Fore, Back, Style
 from colorama import just_fix_windows_console
 import random
-from math import ceil
+from math import ceil, floor
 
 FORES = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE ]
 STYLES = [ Style.DIM, Style.NORMAL, Style.BRIGHT ]
@@ -313,18 +313,17 @@ def main():
 
     #fxtypes = eval(config['trobot Inputs']['fxtypes'])
     #statustypes = eval(config['trobot Inputs']['statustypes'])
-    #graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
-
     #alldatafilename = config['trobot Inputs']['alldatafilename']
-    dbfilename = config['trobot Inputs']['dbfilename']
     #prefix = config['trobot Inputs']['prefix']
     #ohlvcq = config['trobot Inputs']['ohlvcq']
-    maxklines = int(config['trobot Inputs']['maxklines'])
-    
     #fx = fxtypes[1]
     #status = statustypes[1]
     #graphtimeperiod = graphtimeperiodlist[0]
-    
+    dbfilename = config['trobot Inputs']['dbfilename']
+    limit = int(config['trobot Inputs']['assetlimit'])
+    graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
+    maxklines = int(config['trobot Inputs']['maxklines'])
+   
     dbcon = dbconnect(dbfilename)
     client = Spot()
     temp = db_check(dbcon,client)
@@ -333,20 +332,45 @@ def main():
     selecteddata = db_read(dbcon)
     dbcon.close()
 
-    print(selecteddata[0][0])
-    print(selecteddata[0][1])
-    print(selecteddata[0][2])
-    print(selecteddata[0][3])
-    
     just_fix_windows_console()
+
+    tasks = limit * len(graphtimeperiodlist)
+    tdivide = floor(tasks / 4)
+    tremind = tasks % 4
+    
+    #print(tasks,tdivide,tremind)
+   
     baseurl = "https://api.binance.com"
-    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,0,10))
+    tasknum = tdivide
+    if (tremind>0):tasknum += 1
+    tremind -= 1
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,0,tasknum))
+
     baseurl = "https://api1.binance.com"
-    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,10,20))
+    tasknum2 = tasknum + tdivide
+    if (tremind>0):tasknum2 += 1
+    tremind -= 1
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,tasknum,tasknum2))
+    
     baseurl = "https://api2.binance.com"
-    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,20,30))
+    tasknum3 = tasknum2 + tdivide
+    if (tremind>0):tasknum3 += 1
+    tremind -= 1
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,tasknum2,tasknum3))
+    
     baseurl = "https://api3.binance.com"
-    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,30,40))
+    tasknum4 = tasknum3 + tdivide
+    if (tremind>0):tasknum4 += 1
+    tremind -= 1
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,tasknum3,tasknum4))
+    
+    '''
+    print(0,tasknum)
+    print(tasknum,tasknum2)
+    print(tasknum2,tasknum3)
+    print(tasknum3,tasknum4)
+    '''
+    
     p1.start()
     p2.start()
     p3.start()
