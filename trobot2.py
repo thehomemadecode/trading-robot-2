@@ -48,6 +48,7 @@ def dateconvert(date):
     date = int(date*1000)
     return date
 
+# return time periods
 timetable = {
     "1m" :1,
     "3m" :3,
@@ -181,35 +182,20 @@ def refresh_failedtables(dbcon,failedtables,client,maxklines):
     dbcon.commit()
     return 0
 
-def db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename):
-    alldatafile = open(alldatafilename, "r")
-    for line in alldatafile:
-        content = line
-    alldatafile.close()
-    alldata = eval(content)
-    symbollist = []
-    for i in alldata['symbols']:
-        if fx == "ALL" and status == "ALL":
-            symbollist.append(i['symbol'])
-        elif fx == "ALL" and status != "ALL":
-            if status == i['status']:
-                symbollist.append(i['symbol'])
-        elif fx != "ALL" and status == "ALL":
-            if fx == i['symbol'][-(len(fx)):]:
-                symbollist.append(i['symbol'])
-        elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
-            symbollist.append(i['symbol'])
-
+def db_read(dbcon):
+    dbcur = dbcon.cursor()
+    dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;")
+    tables = dbcur.fetchall()
     selecteddata = []
-    for symbol in symbollist:
+    for table in tables:
         try:
-            dbcur = dbcon.cursor()
-            dbcur.execute(f"SELECT * FROM {prefix}_{symbol}_{graphtimeperiod}")
+            dbcur.execute(f"SELECT * FROM {table[0]}")
             data = dbcur.fetchall()
             timetemp = data[len(data)-1][1]
             timedata = str(timetemp)
             timedata = timedata[:-3]
-            rowdata = [symbol,graphtimeperiod,timedata]
+            temp = [x for x in table[0].split("_")]
+            rowdata = [temp[1],temp[2],timedata,temp[0]]
             subrow = []
             for row in reversed(data):
                 subrow += [[row[2], row[3], row[4], row[5], row[6], row[8]]]
@@ -223,7 +209,7 @@ def db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename):
     return selecteddata
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,dbcon,prefix,data):
+async def get_data(baseurl,dbcon,data):
     # debug start
     '''
     print(type(data))
@@ -241,6 +227,7 @@ async def get_data(baseurl,dbcon,prefix,data):
     symbol = data[0].lower()
     klinestarttimedata = int(data[2])
     graphtimeperiod = data[1]
+    prefix = data[3]
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
     dbcur = dbcon.cursor()
     async with websockets.connect(url,max_queue=1) as websocket:
@@ -261,7 +248,7 @@ async def get_data(baseurl,dbcon,prefix,data):
                 else:
                     klinechangedmessage="-"
                 sayac += 1
-                if (sayac>1):break # stop 
+                if (sayac>50):break # stop 
                 if (timediff != 0):
                     dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                     dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -306,16 +293,16 @@ async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     bars = clientws.klines(barsymbol, graphtimeperiod, limit = klimit)
     return bars
 
-async def worker(baseurl,dbcon,prefix,selecteddata,s,f):
+async def worker(baseurl,dbcon,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,dbcon,prefix,data) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,data) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(baseurl,dbfilename,prefix,selecteddata,s,f):
+def dowork(baseurl,dbfilename,selecteddata,s,f):
     dbcon = dbconnect(dbfilename)
-    asyncio.run(worker(baseurl,dbcon,prefix,selecteddata,s,f))
+    asyncio.run(worker(baseurl,dbcon,selecteddata,s,f))
     dbcon.close()
 # ----------------------------------------------------------------------------------------------
 
@@ -324,37 +311,42 @@ def main():
     filename = "config.ini"
     config = init_config(filename)
 
-    fxtypes = eval(config['trobot Inputs']['fxtypes'])
-    statustypes = eval(config['trobot Inputs']['statustypes'])
-    graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
+    #fxtypes = eval(config['trobot Inputs']['fxtypes'])
+    #statustypes = eval(config['trobot Inputs']['statustypes'])
+    #graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
 
-    alldatafilename = config['trobot Inputs']['alldatafilename']
+    #alldatafilename = config['trobot Inputs']['alldatafilename']
     dbfilename = config['trobot Inputs']['dbfilename']
-    prefix = config['trobot Inputs']['prefix']
-    ohlvcq = config['trobot Inputs']['ohlvcq']
+    #prefix = config['trobot Inputs']['prefix']
+    #ohlvcq = config['trobot Inputs']['ohlvcq']
     maxklines = int(config['trobot Inputs']['maxklines'])
     
-    fx = fxtypes[1]
-    status = statustypes[1]
-    graphtimeperiod = graphtimeperiodlist[0]
-
+    #fx = fxtypes[1]
+    #status = statustypes[1]
+    #graphtimeperiod = graphtimeperiodlist[0]
+    
     dbcon = dbconnect(dbfilename)
     client = Spot()
     temp = db_check(dbcon,client)
     failedtables = consistency_db_check(dbcon)
     temp = refresh_failedtables(dbcon,failedtables,client,maxklines)
-    selecteddata = db_read(dbcon,prefix,fx,status,graphtimeperiod,alldatafilename)
+    selecteddata = db_read(dbcon)
     dbcon.close()
+
+    print(selecteddata[0][0])
+    print(selecteddata[0][1])
+    print(selecteddata[0][2])
+    print(selecteddata[0][3])
     
     just_fix_windows_console()
     baseurl = "https://api.binance.com"
-    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,0,10))
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,0,10))
     baseurl = "https://api1.binance.com"
-    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,10,20))
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,10,20))
     baseurl = "https://api2.binance.com"
-    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,20,30))
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,20,30))
     baseurl = "https://api3.binance.com"
-    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,prefix,selecteddata,30,40))
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,30,40))
     p1.start()
     p2.start()
     p3.start()
@@ -367,7 +359,7 @@ def main():
     p2.terminate()
     p3.terminate()
     p4.terminate()
-
+    
     '''
     col = letter_to_number(ohlvcq)
     for rowdata in selecteddata:

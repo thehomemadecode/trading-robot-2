@@ -138,7 +138,13 @@ print(f'Subtraction result: {result_subtract}')
 result_multiply = execute_function('multiply', 6, 7)
 print(f'Multiplication result: {result_multiply}')
 # -----------------------------------------------------------------------------------------------
-
+dbcur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC;")
+tables = dbcur.fetchall()
+dbcur.execute("PRAGMA table_info('{}');".format(tables[0][0]))
+columns = dbcur.fetchall()
+column_names = [column[1] for column in columns]
+select_columns = ", ".join(column_names[2:-6])
+select_columns = select_columns+", "+column_names[8]
 # -----------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------

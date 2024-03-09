@@ -13,7 +13,7 @@ def main():
     os.system(cmd2)
     os.system(cmd3)
 
-    os.system(cmd4)
+    #os.system(cmd4)
     os.system(cmd5)
     os.system(cmd6)
 
