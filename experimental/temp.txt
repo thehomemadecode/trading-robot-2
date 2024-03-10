@@ -146,7 +146,21 @@ column_names = [column[1] for column in columns]
 select_columns = ", ".join(column_names[2:-6])
 select_columns = select_columns+", "+column_names[8]
 # -----------------------------------------------------------------------------------------------
+	char* assetname = "";
+	PyObject* py_string_object = PyList_GetItem(data, 0);
+	if (PyUnicode_Check(py_string_object)) {
+		PyObject* py_bytes_object = PyUnicode_AsUTF8String(py_string_object);
+		if (py_bytes_object != NULL) {
+			assetname = PyBytes_AsString(py_bytes_object);
+			if (assetname != NULL) {
+				// assetname kullanılabilir
+				printf("Asset Name: %s\n", assetname);
+			}
+			Py_DECREF(py_bytes_object);
+		}
+	}
 
+	return Py_BuildValue("s", assetname);
 # -----------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------

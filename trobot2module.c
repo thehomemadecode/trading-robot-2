@@ -1,5 +1,5 @@
 #include <Python.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 static PyObject *cryptocurrencyGateA(PyObject *self, PyObject *args) {
 	PyObject* data;
@@ -7,9 +7,31 @@ static PyObject *cryptocurrencyGateA(PyObject *self, PyObject *args) {
 	if (!PyArg_ParseTuple(args, "Oi", &data, &col)) {
 		return NULL;
 	}
-	PyObject* datareturn;
-	datareturn = data;
-	return Py_BuildValue("O", datareturn);
+	// 0:assetname 1:timeperiod 2:timedata 3:prefix 4:data
+	/*
+	char* assetname = "";
+	PyObject* py_string_object = PyList_GetItem(data, 0);
+	PyObject* py_bytes_object = PyUnicode_AsUTF8String(py_string_object);
+	assetname = PyBytes_AsString(py_bytes_object);
+	Py_DECREF(py_bytes_object);
+	*/
+	PyObject* data4 = PyList_GetItem(data, 4);
+	Py_ssize_t data4s = PyList_Size(data4);
+	PyObject* datalist = PyList_New(0);
+	double value = 0;
+	for (int i=0; i<data4s; i++) {
+		PyObject* datarow = PyList_GetItem(data4, i);
+		PyObject* datacell = PyList_GetItem(datarow, col);
+		PyList_Append(datalist, datacell);
+		PyObject* valuef = PyFloat_FromString(datacell);
+		value = PyFloat_AsDouble(valuef);
+	}
+	return Py_BuildValue("d", value);
+	//PyObject *returnvalues = Py_BuildValue("d",value);	
+	//PyObject *returnvalues = Py_BuildValue("O", datalist);
+	//int result = datasize + col;
+	//return Py_BuildValue("s", assetname);
+	////////////////return returnvalues;
 }
 
 static PyObject *cryptocurrencyGate(PyObject *self, PyObject *args) {
@@ -41,7 +63,7 @@ static PyObject *cryptocurrencyGate(PyObject *self, PyObject *args) {
 	PyObject *returnvalues = Py_BuildValue("O", datalist);
 	return returnvalues;
 }
-
+/*
 static PyObject *check(PyObject *self, PyObject *args) {
 	PyObject* data;
 	if (!PyArg_ParseTuple(args, "i", &data)) {
@@ -56,7 +78,7 @@ int subcheck(int x) {
 	// test3
   return x;
 }
-
+*/
 static PyObject *sma(PyObject *self, PyObject *args) {
     PyObject* py_list;
 	PyObject* py_list2;
@@ -82,7 +104,7 @@ static PyObject *sma(PyObject *self, PyObject *args) {
 static PyMethodDef trobot2Methods[] = {
     {"cryptocurrencyGate", cryptocurrencyGate, METH_VARARGS, "cryptocurrencyGate"},
 	{"cryptocurrencyGateA", cryptocurrencyGateA, METH_VARARGS, "cryptocurrencyGateA"},
-    {"check", check, METH_VARARGS, "check"},	
+    //{"check", check, METH_VARARGS, "check"},	
     {"sma", sma, METH_VARARGS, "Simple moving average"},
     {NULL, NULL, 0, NULL}
 };

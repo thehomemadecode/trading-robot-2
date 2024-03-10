@@ -262,6 +262,28 @@ async def get_data(baseurl,dbcon,data):
                     klimit = int(timediff/(timetable[graphtimeperiod]*60))
                     klimit += 1
                     bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
+                    # start ---- > updating datasend < ----------------------------------------------------
+                    '''
+                    print("start ---- > updating datasend < ----------------------------------------------------")
+                    print(data[0], data[1], data[2], data[3])
+                    print("bars\n",bars)
+                    for i in range(0,5):
+                        print("data[4]\n",data[4][i])
+                    
+                    print("--------------------")
+                    '''
+                    data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
+                    data[4] = [[bars[1][1], bars[1][2], bars[1][3], bars[1][4], bars[1][5], bars[1][7]]] + data[4]
+                    '''
+                    for i in range(0,5):
+                        print("data[4]\n",data[4][i])
+                    print("end ------ > updating datasend < ----------------------------------------------------")
+                    exit()
+                    '''
+                    for i in range(0,len(data[4])):
+                        print(data[4][i][3],end=" ")
+                    print("")
+                    # end ------ > updating datasend < ----------------------------------------------------
                     sql1 = f"INSERT INTO {dbtable} "
                     sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
                     for bar in bars:
@@ -273,6 +295,9 @@ async def get_data(baseurl,dbcon,data):
                         dbcur.execute(sql)
                     dbcon.commit()
                     # start ---- > trobot C module < ----------------------------------------------------
+                    res = tr.cryptocurrencyGateA(data,3)
+                    print("cryptocurrencyGateA",res)
+                    exit()
                     '''
                     filename = "config.ini"
                     config = init_config(filename)
