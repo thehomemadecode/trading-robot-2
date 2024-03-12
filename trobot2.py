@@ -210,15 +210,6 @@ def db_read(dbcon):
 
 # ----------------------------------------------------------------------------------------------
 async def get_data(baseurl,dbcon,data):
-    # debug start
-    '''
-    print(type(data))
-    print(data[0],data[1],data[2])
-    for d in data[3]:
-        print(d[3])
-    print("------------------------------------------------------")
-    '''
-    # debug end
     renk = random.sample(FORES,k=1)
     stil = random.sample(STYLES,k=1)
     renk = renk[0]
@@ -237,9 +228,12 @@ async def get_data(baseurl,dbcon,data):
             newdata = await websocket.recv()
             newdata = json.loads(newdata)
             closeprice = newdata['k']['c']
-            websocketklineopentime = newdata['k']['t']
+            websocketklineopentime = newdata['k']['t']         
             websocketklineopentime = int(websocketklineopentime/1000)
             if (olddata != closeprice):
+                # start ---- > updating datasend < ----------------------------------------------------
+                data[4][0] = [newdata['k']['o'], newdata['k']['h'], newdata['k']['l'], newdata['k']['c'], newdata['k']['v'], newdata['k']['q']]
+                # end ------ > updating datasend < ----------------------------------------------------   
                 olddata = closeprice
                 timediff = websocketklineopentime-klinestarttimedata
                 timestr = datetime.now().isoformat()[11:23]
@@ -257,32 +251,13 @@ async def get_data(baseurl,dbcon,data):
                         sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
                         #print(sql)
                         dbcur.execute(sql)
-                    dbcon.commit()
-                    
+                    dbcon.commit()                    
                     klimit = int(timediff/(timetable[graphtimeperiod]*60))
                     klimit += 1
                     bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
                     # start ---- > updating datasend < ----------------------------------------------------
-                    '''
-                    print("start ---- > updating datasend < ----------------------------------------------------")
-                    print(data[0], data[1], data[2], data[3])
-                    print("bars\n",bars)
-                    for i in range(0,5):
-                        print("data[4]\n",data[4][i])
-                    
-                    print("--------------------")
-                    '''
                     data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
                     data[4] = [[bars[1][1], bars[1][2], bars[1][3], bars[1][4], bars[1][5], bars[1][7]]] + data[4]
-                    '''
-                    for i in range(0,5):
-                        print("data[4]\n",data[4][i])
-                    print("end ------ > updating datasend < ----------------------------------------------------")
-                    exit()
-                    '''
-                    for i in range(0,len(data[4])):
-                        print(data[4][i][3],end=" ")
-                    print("")
                     # end ------ > updating datasend < ----------------------------------------------------
                     sql1 = f"INSERT INTO {dbtable} "
                     sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
@@ -294,22 +269,19 @@ async def get_data(baseurl,dbcon,data):
                         sql = sql1+sql2+f"VALUES({sql3})"
                         dbcur.execute(sql)
                     dbcon.commit()
-                    # start ---- > trobot C module < ----------------------------------------------------
-                    res = tr.cryptocurrencyGateA(data,3)
-                    print("cryptocurrencyGateA",res)
-                    exit()
-                    '''
-                    filename = "config.ini"
-                    config = init_config(filename)
-                    allrules = init_rules(config['rules'])
-                    resc = tr.check(3)
-                    datasend = eval(data)
-                    resc2 = tr.cryptocurrencyGateA(datasend,3)
-                    print(resc)
-                    print(resc2)
-                    '''
-                    # end ------ > trobot C module < ----------------------------------------------------
                 print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}")
+                # start ---- > trobot C module < ----------------------------------------------------
+                res = tr.cryptocurrencyGateA(data,3)
+                signal = res[0]
+                if (signal>0):
+                    print(data[0], data[1], data[2], data[3], end=" ")
+                    print("cryptocurrencyGateA",res[0],round(res[1],4))
+                '''
+                filename = "config.ini"
+                config = init_config(filename)
+                allrules = init_rules(config['rules'])
+                '''
+                # end ------ > trobot C module < ----------------------------------------------------
         print(f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
 
 async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):

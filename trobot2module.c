@@ -7,6 +7,34 @@ static PyObject *cryptocurrencyGateA(PyObject *self, PyObject *args) {
 	if (!PyArg_ParseTuple(args, "Oi", &data, &col)) {
 		return NULL;
 	}
+	PyObject* data4 = PyList_GetItem(data, 4);
+	//Py_ssize_t data4s = PyList_Size(data4);
+	PyObject* datarow;
+	PyObject* datacell;
+	PyObject* datalist = PyList_New(0);
+	PyObject* valuef;
+	double value = 0;
+	double price = 0;
+	for (int i=0; i<9; i++) {
+		datarow = PyList_GetItem(data4, i);
+		datacell = PyList_GetItem(datarow, col);
+		PyList_Append(datalist, datacell);
+		valuef = PyFloat_FromString(datacell);
+		value = value + PyFloat_AsDouble(valuef);
+	}
+	value = value / 9;
+
+	datarow = PyList_GetItem(data4, 0);
+	datacell = PyList_GetItem(datarow, 3);
+	valuef = PyFloat_FromString(datacell);
+	price = PyFloat_AsDouble(valuef);
+	
+	double signal = 0;
+	if (price > value) {
+		signal = 1;
+	}
+	return Py_BuildValue("dd", signal, value);
+}
 	// 0:assetname 1:timeperiod 2:timedata 3:prefix 4:data
 	/*
 	char* assetname = "";
@@ -15,25 +43,11 @@ static PyObject *cryptocurrencyGateA(PyObject *self, PyObject *args) {
 	assetname = PyBytes_AsString(py_bytes_object);
 	Py_DECREF(py_bytes_object);
 	*/
-	PyObject* data4 = PyList_GetItem(data, 4);
-	Py_ssize_t data4s = PyList_Size(data4);
-	PyObject* datalist = PyList_New(0);
-	double value = 0;
-	for (int i=0; i<data4s; i++) {
-		PyObject* datarow = PyList_GetItem(data4, i);
-		PyObject* datacell = PyList_GetItem(datarow, col);
-		PyList_Append(datalist, datacell);
-		PyObject* valuef = PyFloat_FromString(datacell);
-		value = PyFloat_AsDouble(valuef);
-	}
-	return Py_BuildValue("d", value);
 	//PyObject *returnvalues = Py_BuildValue("d",value);	
 	//PyObject *returnvalues = Py_BuildValue("O", datalist);
 	//int result = datasize + col;
 	//return Py_BuildValue("s", assetname);
 	////////////////return returnvalues;
-}
-
 static PyObject *cryptocurrencyGate(PyObject *self, PyObject *args) {
 	PyObject* selecteddata;
 	int col;
