@@ -28,7 +28,7 @@ RUN python initdata/init_multi.py
 # For example, to keep the container running without a specific task:
 WORKDIR /app/initdata
 
-CMD python initdata/init_multi.py && /bin/sh
+CMD python init_multi.py && /bin/sh
 
 
 
