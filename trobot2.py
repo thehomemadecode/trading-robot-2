@@ -14,7 +14,7 @@ from math import ceil, floor
 
 FORES = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE ]
 STYLES = [ Style.DIM, Style.NORMAL, Style.BRIGHT ]
-
+#CommentTest
 # read config.ini
 def init_config(filename):
     config = {}
