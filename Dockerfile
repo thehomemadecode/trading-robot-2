@@ -26,4 +26,9 @@ RUN python initdata/init_multi.py
 # The default command to run when starting the container
 # This can be an application, a script, or simply a command to keep the container running
 # For example, to keep the container running without a specific task:
-CMD ["tail", "-f", "/dev/null"]
+WORKDIR /app/initdata
+
+CMD python initdata/init_multi.py && /bin/sh
+
+
+
