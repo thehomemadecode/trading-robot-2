@@ -43,6 +43,8 @@ def main():
         copy_cmd(os.path.join(current_dir, "candlestick.db"), parent_dir)
         candlestick_db_path = os.path.join(current_dir, "candlestick.db")
         os.remove(candlestick_db_path)
+        config_ini_path = os.path.join(current_dir, "config.ini")
+        copy_cmd(config_ini_path, parent_dir)
         alldata_txt_path = os.path.join(current_dir, "alldata.txt")
         if os.path.exists(alldata_txt_path):
             os.remove(alldata_txt_path)
