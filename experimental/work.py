@@ -30,11 +30,16 @@ datasend = [row] + datasend
 #print(datasend)
 
 cols = [0,1,2,3,4,5]
-analysisrules = ["sma","ema"]
+analysisrules = [["sma",2],["ema",3]]
+
 
 
 for i in range(0,len(datasend)):
     res = (datasend[i][0]+datasend[i][1])/2
+    res = round(res,4)
+    print(res)
+for i in range(0,len(datasend)):
+    res = (datasend[i][0]+datasend[i][1]+datasend[i][2])/3
     res = round(res,4)
     print(res)
 #print(datasend)

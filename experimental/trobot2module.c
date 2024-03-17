@@ -3,9 +3,8 @@
 #include <string.h>
 
 /* TA functions section begin */
-double sma(double *data) {
+double sma(double *data, int len) {
     double total = 0;
-    int len = 2;
     for (int i=0; i<len; i++) {
         total += data[i];
     }
@@ -13,9 +12,8 @@ double sma(double *data) {
     return total;
 }
 
-double ema(double *data) {
+double ema(double *data, int len) {
     double total = 0;
-    int len = 2;
     for (int i=0; i<len; i++) {
         total += data[i];
     }
@@ -25,14 +23,14 @@ double ema(double *data) {
 /* TA functions section end */
 
 /* function map section begin */
-typedef double (*func_ptr_double)(double*);
+typedef double (*func_ptr_double)(double*, int);
 typedef struct {
     const char *name;
     func_ptr_double func;
 } FunctionMap;
 FunctionMap functions[] = {
-    {"sma", (func_ptr_double)sma}, // Yeniden dönüştürme yapılır
-    {"ema", (func_ptr_double)ema}, // Yeniden dönüştürme yapılır
+    {"sma", (func_ptr_double)sma},
+    {"ema", (func_ptr_double)ema},
 };
 func_ptr_double get_function(const char *name) {
     for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
@@ -40,7 +38,7 @@ func_ptr_double get_function(const char *name) {
             return functions[i].func;
         }
     }
-    return NULL; // Eşleşme yoksa NULL döndür
+    return NULL;
 }
 /* function map section end */
 
@@ -75,17 +73,22 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 
     Py_ssize_t len = PyList_Size(analysisrules);
     const char *function_names[len];
+    int function_names_len[len];
     for (Py_ssize_t i = 0; i < len; ++i) {
         PyObject *item = PyList_GetItem(analysisrules, i);
-        const char *name = PyUnicode_AsUTF8(item);
+        PyObject *item0 = PyList_GetItem(item, 0);
+        PyObject *item1 = PyList_GetItem(item, 1);
+        const char *name = PyUnicode_AsUTF8(item0);
+        int name_len = (int)PyLong_AsLong(item1);
         function_names[i] = name;
+        function_names_len[i] = name_len;
     }
-    
+
     for (size_t i = 0; i < sizeof(function_names) / sizeof(function_names[0]); ++i) {
         const char *name = function_names[i];
         func_ptr_double func = get_function(name);
         for (Py_ssize_t j=0; j<num_rows; j++) {
-            printf("%s = %lf\n", name, func(data_c[j]));
+            printf("%s = %0.4lf\n", name, func(data_c[j],function_names_len[i]));
         }
     }
 
