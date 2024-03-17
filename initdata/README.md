@@ -1,6 +1,7 @@
 ### Linux & Windows:
 ```
-python3 initdata_multi.py
+Linux: python3 initdata_multi.py
+Windows: python initdata_multi.py
 ```
 
 ### Linux:
