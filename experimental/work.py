@@ -31,8 +31,8 @@ print(datasend)
 
 cols = [0,1,2,3,4,5]
 
-analysisrule = "sma(5)>ema(8)>hma(11)"
-#analysisrule = "hma(2)>ema(7)"
+analysisrule = "sma(10)>ema(9)<hma(30)"
+#analysisrule = "hma(20)<ema(7)"
 
 
 #print(datasend)

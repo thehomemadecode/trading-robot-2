@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#define TRUE 0b1
+#define FALSE 0b0
+#define GT '>'
+#define LT '<'
+#define ET '='
+
 /* TA functions section begin */
 double sma(double a[], int len) {
     double res = a[0]+len;
@@ -69,14 +75,15 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
     char word1f[20], word2f[20], word3f[20];
     int param1, param2, param3;
     double res1, res2, res3;
-    
+    int index;
+    unsigned char result,result2;
     if (matched == 3) {
         int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
         int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
         //printf("%d %d %d\n",m1,m2);
         if (m1==2) {
             printf("word1: %s %d\n", word1f,param1);
-			int index = -1;
+			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
 		            index = i;
@@ -90,7 +97,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         }
         if (m2==2) {
             printf("word2: %s %d\n", word2f,param2);
-			int index = -1;
+			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
 		            index = i;
@@ -103,6 +110,14 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             printf("word2: %s\n", word2);
         }
         printf("separator1: %c\n", separator1);
+
+        if      (separator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
+        else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
+        else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
+        else {result = FALSE;}
+        if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
+        
+
     } else if (matched == 5) {
         int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
         int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
@@ -110,7 +125,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         //printf("%d %d %d\n",m1,m2,m3);
         if (m1==2) {
             printf("word1: %s %d\n", word1f,param1);
-			int index = -1;
+			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
 		            index = i;
@@ -124,7 +139,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         }
         if (m2==2) {
             printf("word2: %s %d\n", word2f,param2);
-			int index = -1;
+			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
 		            index = i;
@@ -138,7 +153,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         }
         if (m3==2) {
             printf("word3: %s %d\n", word3f,param3);
-			int index = -1;
+			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word3f) == 0) {
 		            index = i;
@@ -152,8 +167,22 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         }
         printf("separator1: %c\n", separator1);
         printf("separator2: %c\n", separator2);
-    }	
-	
+
+        if      (separator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
+        else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
+        else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
+        else {result = FALSE;}
+
+        if      (separator2 == GT) {if(res2 > res3){result2 = TRUE;} else {result2 = FALSE;}}
+        else if (separator2 == LT) {if(res2 < res3){result2 = TRUE;} else {result2 = FALSE;}}
+        else if (separator2 == ET) {if(res2 == res3){result2 = TRUE;} else {result2 = FALSE;}}
+        else {result2 = FALSE;}
+        
+        result = result && result2;
+
+        if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
+
+    }
 	/*
 	int selected_functions[2];
 	selected_functions[0] = 0;
@@ -161,6 +190,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 	double res1 = functionsTA[selected_functions[0]](data_c[0], 2);
 	double res2 = functionsTA[selected_functions[1]](data_c[0], 3);
 	*/
+
 	if (matched == 3) {
 		return Py_BuildValue("dd", res1, res2);
 	} else if (matched == 5) {
@@ -172,7 +202,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 }
 /* Reception function end */
 
-/* for Python.h to the end of code */
+/* Python.h definitions begin */
 static PyMethodDef trobot2Methods[] = {
     {"receptionP", receptionC, METH_VARARGS, "Reception function for incoming data."},
     {NULL, NULL, 0, NULL}
@@ -187,4 +217,5 @@ static struct PyModuleDef trobot2 = {
 PyMODINIT_FUNC PyInit_trobot2(void) {
     return PyModule_Create(&trobot2);
 }
-/* end of code */
+/* Python.h definitions end */
+/* that's all folks -- the end of the code */
