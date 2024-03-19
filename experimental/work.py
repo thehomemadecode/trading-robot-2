@@ -31,8 +31,8 @@ print(datasend)
 
 cols = [0,1,2,3,4,5]
 
-analysisrule = "sma(2)>open>ema(3)"
-
+analysisrule = "sma(5)>ema(8)>hma(11)"
+#analysisrule = "hma(2)>ema(7)"
 
 
 #print(datasend)
@@ -40,9 +40,6 @@ analysisrule = "sma(2)>open>ema(3)"
 #print(analysisrules)
 
 res = tr.receptionP(datasend,cols,analysisrule)
-r0 = res[0]
-r1 = res[1]
-r0 = round(r0,4)
-r1 = round(r1,4)
-print("tr0:",r0)
-print("tr1:",r1)
+for r in res:
+    print("tr0:",round(r,4))
+
