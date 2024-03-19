@@ -23,13 +23,29 @@ double ema(double *data, int len) {
 /* TA functions section end */
 
 /* function map section begin */
-double (*functionsTA[])(double[], int) = {sma, ema};
+typedef double (*func_ptr_double)(double*, int);
+typedef struct {
+    const char *name;
+    func_ptr_double func;
+} FunctionMap;
+FunctionMap functions[] = {
+    {"sma", (func_ptr_double)sma},
+    {"ema", (func_ptr_double)ema},
+};
+func_ptr_double get_function(const char *name) {
+    for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
+        if (strcmp(name, functions[i].name) == 0) {
+            return functions[i].func;
+        }
+    }
+    return NULL;
+}
 /* function map section end */
 
 /* Reception function for incoming data: */
 static PyObject *receptionC(PyObject *self, PyObject *args) {
-    PyObject* data; // --> data_c[i][j]
-    PyObject* cols; // --> cols_c[i]
+    PyObject* data;
+    PyObject* cols;
     PyObject* analysisrules;
     if (!PyArg_ParseTuple(args, "OOO", &data, &cols, &analysisrules)) {
         return NULL;
@@ -49,24 +65,40 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
     }
 
     Py_ssize_t len_cols = PyList_Size(cols);
-    double *cols_c = malloc(len_cols * sizeof(double *));
-    for (Py_ssize_t i=0; i<len_cols; i++) {
+    int cols_c[len_cols];
+    for (Py_ssize_t i = 0; i < len_cols; ++i) {
         PyObject *item = PyList_GetItem(cols, i);
         cols_c[i] = (int)PyLong_AsLong(item);
     }
 
-	int selected_functions[2];
-	selected_functions[0] = 0;
-	selected_functions[1] = 1;
-	double res1 = functionsTA[selected_functions[0]](data_c[0], 2);
-	double res2 = functionsTA[selected_functions[1]](data_c[0], 3);
+    Py_ssize_t len = PyList_Size(analysisrules);
+    const char *function_names[len];
+    int function_names_len[len];
+    for (Py_ssize_t i = 0; i < len; ++i) {
+        PyObject *item = PyList_GetItem(analysisrules, i);
+        PyObject *item0 = PyList_GetItem(item, 0);
+        PyObject *item1 = PyList_GetItem(item, 1);
+        const char *name = PyUnicode_AsUTF8(item0);
+        int name_len = (int)PyLong_AsLong(item1);
+        function_names[i] = name;
+        function_names_len[i] = name_len;
+    }
 
-	printf("testtest\n");
+    for (size_t i = 0; i < sizeof(function_names) / sizeof(function_names[0]); ++i) {
+        const char *name = function_names[i];
+        func_ptr_double func = get_function(name);
+        for (Py_ssize_t j=0; j<num_rows; j++) {
+            printf("%s = %0.4lf\n", name, func(data_c[j],function_names_len[i]));
+        }
+    }
 
-    //double signal = data_c[0][0];
-    //double signal2 = cols_c[3];
-    //return Py_BuildValue("dd", signal, signal2);
-    return Py_BuildValue("dd", res1, res2);
+
+
+
+
+    double signal = 0;
+    double signal2 = 0;
+    return Py_BuildValue("dd", signal, signal2);
 }
 /* Reception function end */
 
