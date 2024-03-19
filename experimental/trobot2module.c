@@ -3,38 +3,38 @@
 #include <string.h>
 
 /* TA functions section begin */
-double sma(double *data, int len) {
-    double total = 0;
-    for (int i=0; i<len; i++) {
-        total += data[i];
-    }
-    total = total / len;
-    return total;
+double sma(double a[], int len) {
+    double res = a[0]+len;
+	return res;
 }
-
-double ema(double *data, int len) {
-    double total = 0;
-    for (int i=0; i<len; i++) {
-        total += data[i];
-    }
-    total = total / len;
-    return total;
+double ema(double a[], int len) {
+    double res = a[0]+len;
+	return res;
+}
+double wma(double a[], int len) {
+    double res = a[0]+len;
+	return res;
+}
+double hma(double a[], int len) {
+    double res = a[0]+len;
+	return res;
 }
 /* TA functions section end */
 
 /* function map section begin */
-double (*functionsTA[])(double[], int) = {sma, ema};
+double (*functionsTA[])(double[], int) = {sma, ema, wma, hma};
 /* function map section end */
 
 /* Reception function for incoming data: */
 static PyObject *receptionC(PyObject *self, PyObject *args) {
     PyObject* data; // --> data_c[i][j]
     PyObject* cols; // --> cols_c[i]
-    PyObject* analysisrules;
-    if (!PyArg_ParseTuple(args, "OOO", &data, &cols, &analysisrules)) {
+    PyObject* analysisrule; // --> analysisrule 'atoms'
+    if (!PyArg_ParseTuple(args, "OOO", &data, &cols, &analysisrule)) {
         return NULL;
     }
-
+	
+	// --> data_c[i][j]
     Py_ssize_t num_rows = PyList_Size(data);
     Py_ssize_t num_cols = 0;
     double **data_c = malloc(num_rows * sizeof(double *));
@@ -47,7 +47,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             data_c[i][j] = PyFloat_AsDouble(item);
         }
     }
-
+	
+	// --> cols_c[i]
     Py_ssize_t len_cols = PyList_Size(cols);
     double *cols_c = malloc(len_cols * sizeof(double *));
     for (Py_ssize_t i=0; i<len_cols; i++) {
@@ -55,17 +56,61 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         cols_c[i] = (int)PyLong_AsLong(item);
     }
 
+	// --> analysisrule 'atoms'
+	PyObject* analysisrulePy = PyUnicode_AsUTF8String(analysisrule);
+	char* analysisruleC = PyBytes_AsString(analysisrulePy);
+    char word1[20], word2[20], word3[20];
+    char separator1, separator2;
+
+	int matched = sscanf(analysisruleC, "%19[^<>=] %c %19[^<>=] %c %19[^<>=]", word1, &separator1, word2, &separator2, word3);
+	//printf("matched: %d\n",matched);
+
+    if (matched == 3) {
+        printf("word1: %s\n", word1);
+        printf("separator: %c\n", separator1);
+        printf("word2: %s\n", word2);
+
+    } else if (matched == 5) {
+        char word1f[20], word2f[20], word3f[20];
+        int param1, param2, param3;
+        int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
+        int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
+        int m3 = sscanf(word3, "%[^(](%d)", word3f, &param3);
+
+        //printf("%d %d %d\n",m1,m2,m3);
+        if (m1==2) {
+            printf("word1: %s %d\n", word1f,param1);
+        } else {
+            printf("word1: %s\n", word1);
+        }
+        if (m2==2) {
+            printf("word2: %s %d\n", word2f,param2);
+        } else {
+            printf("word2: %s\n", word2);
+        }
+        if (m3==2) {
+            printf("word3: %s %d\n", word3f,param3);
+        } else {
+            printf("word3: %s\n", word3);
+        }
+
+        printf("separator1: %c\n", separator1);
+        printf("separator2: %c\n", separator2);
+    }	
+
+
+	
+	
+	
+	
+
+
 	int selected_functions[2];
 	selected_functions[0] = 0;
 	selected_functions[1] = 1;
 	double res1 = functionsTA[selected_functions[0]](data_c[0], 2);
 	double res2 = functionsTA[selected_functions[1]](data_c[0], 3);
 
-	printf("testtest\n");
-
-    //double signal = data_c[0][0];
-    //double signal2 = cols_c[3];
-    //return Py_BuildValue("dd", signal, signal2);
     return Py_BuildValue("dd", res1, res2);
 }
 /* Reception function end */
