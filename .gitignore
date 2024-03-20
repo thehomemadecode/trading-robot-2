@@ -5,3 +5,4 @@ trobot2.cp311-win_amd64.pyd
 trobot2.cpython-311-x86_64-linux-gnu.so
 __pycache__/*
 build/*
+experimental/build
