@@ -75,7 +75,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
     char word1f[20], word2f[20], word3f[20];
     int param1, param2, param3;
     double res1, res2, res3;
-    int index;
+    const char *ohlclist[6] = {"open", "high", "low", "close", "volume", "qvolume"};
     unsigned char result,result2;
     if (matched == 3) {
         int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
@@ -83,10 +83,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         //printf("%d %d %d\n",m1,m2);
         if (m1==2) {
             printf("word1: %s %d\n", word1f,param1);
-			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
-		            index = i;
 		            res1 = functionsTA[i](data_c[0], param1);
 		            printf("_res1: %f\n",res1);
 		            break;
@@ -94,13 +92,18 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    }
         } else {
             printf("word1: %s\n", word1);
+		    for (int i = 0; i < 6; ++i) {
+		        if (strcmp(ohlclist[i], word1) == 0) {
+		            res1 = data_c[0][i];
+		            printf("_%s: %f\n",word1,res1);
+		            break;
+		        }
+		    }
         }
         if (m2==2) {
             printf("word2: %s %d\n", word2f,param2);
-			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
-		            index = i;
 		            res2 = functionsTA[i](data_c[0], param2);
 		            printf("_res2: %f\n",res2);
 		            break;
@@ -108,6 +111,13 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    }
         } else {
             printf("word2: %s\n", word2);
+		    for (int i = 0; i < 6; ++i) {
+		        if (strcmp(ohlclist[i], word2) == 0) {
+		            res2 = data_c[0][i];
+		            printf("_%s: %f\n",word2,res2);
+		            break;
+		        }
+		    }
         }
         printf("separator1: %c\n", separator1);
 
@@ -116,7 +126,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
         else {result = FALSE;}
         if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
-        
 
     } else if (matched == 5) {
         int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
@@ -125,10 +134,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         //printf("%d %d %d\n",m1,m2,m3);
         if (m1==2) {
             printf("word1: %s %d\n", word1f,param1);
-			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
-		            index = i;
 		            res1 = functionsTA[i](data_c[0], param1);
 		            printf("_res1: %f\n",res1);
 		            break;
@@ -136,13 +143,18 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    }
         } else {
             printf("word1: %s\n", word1);
+		    for (int i = 0; i < 6; ++i) {
+		        if (strcmp(ohlclist[i], word1) == 0) {
+		            res1 = data_c[0][i];
+		            printf("_%s: %f\n",word1,res1);
+		            break;
+		        }
+		    }
         }
         if (m2==2) {
             printf("word2: %s %d\n", word2f,param2);
-			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
-		            index = i;
 		            res2 = functionsTA[i](data_c[0], param2);
 		            printf("_res2: %f\n",res2);
 		            break;
@@ -150,13 +162,18 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    }
         } else {
             printf("word2: %s\n", word2);
+		    for (int i = 0; i < 6; ++i) {
+		        if (strcmp(ohlclist[i], word2) == 0) {
+		            res2 = data_c[0][i];
+		            printf("_%s: %f\n",word2,res2);
+		            break;
+		        }
+		    }
         }
         if (m3==2) {
             printf("word3: %s %d\n", word3f,param3);
-			index = -1;
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word3f) == 0) {
-		            index = i;
 		            res3 = functionsTA[i](data_c[0], param3);
 		            printf("_res3: %f\n",res3);
 		            break;
@@ -164,6 +181,13 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    }
         } else {
             printf("word3: %s\n", word3);
+		    for (int i = 0; i < 6; ++i) {
+		        if (strcmp(ohlclist[i], word3) == 0) {
+		            res3 = data_c[0][i];
+		            printf("_%s: %f\n",word3,res3);
+		            break;
+		        }
+		    }
         }
         printf("separator1: %c\n", separator1);
         printf("separator2: %c\n", separator2);
