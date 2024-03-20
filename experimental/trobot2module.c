@@ -10,19 +10,19 @@
 
 /* TA functions section begin */
 double sma(double a[], int len) {
-    double res = a[0]+len;
+    double res = a[3]+len;
 	return res;
 }
 double ema(double a[], int len) {
-    double res = a[0]+len;
+    double res = a[3]+len;
 	return res;
 }
 double wma(double a[], int len) {
-    double res = a[0]+len;
+    double res = a[3]+len;
 	return res;
 }
 double hma(double a[], int len) {
-    double res = a[0]+len;
+    double res = a[3]+len;
 	return res;
 }
 /* TA functions section end */
@@ -51,6 +51,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         data_c[i] = malloc(num_cols * sizeof(double));
         for (Py_ssize_t j = 0; j < num_cols; ++j) {
             PyObject *item = PyList_GetItem(row, j);
+            item = PyFloat_FromString(item); // comment it while working with work.py !!!!!!!!!
             data_c[i][j] = PyFloat_AsDouble(item);
         }
     }
@@ -82,50 +83,51 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
         //printf("%d %d %d\n",m1,m2);
         if (m1==2) {
-            printf("word1: %s %d\n", word1f,param1);
+            //printf("word1: %s %d\n", word1f,param1);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
 		            res1 = functionsTA[i](data_c[0], param1);
-		            printf("_res1: %f\n",res1);
+		            //printf("_res1: %f\n",res1);
 		            break;
 		        }
 		    }
         } else {
-            printf("word1: %s\n", word1);
+            //printf("word1: %s\n", word1);
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word1) == 0) {
 		            res1 = data_c[0][i];
-		            printf("_%s: %f\n",word1,res1);
+		            //printf("_%s: %f\n",word1,res1);
 		            break;
 		        }
 		    }
         }
         if (m2==2) {
-            printf("word2: %s %d\n", word2f,param2);
+            //printf("word2: %s %d\n", word2f,param2);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
 		            res2 = functionsTA[i](data_c[0], param2);
-		            printf("_res2: %f\n",res2);
+		            //printf("_res2: %f\n",res2);
 		            break;
 		        }
 		    }
         } else {
-            printf("word2: %s\n", word2);
+            //printf("word2: %s\n", word2);
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word2) == 0) {
 		            res2 = data_c[0][i];
-		            printf("_%s: %f\n",word2,res2);
+		            //printf("_%s: %f\n",word2,res2);
 		            break;
 		        }
 		    }
         }
-        printf("separator1: %c\n", separator1);
+        //printf("separator1: %c\n", separator1);
 
         if      (separator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
         else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
         else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
         else {result = FALSE;}
-        if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
+        
+		if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
 
     } else if (matched == 5) {
         int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
@@ -133,64 +135,64 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         int m3 = sscanf(word3, "%[^(](%d)", word3f, &param3);
         //printf("%d %d %d\n",m1,m2,m3);
         if (m1==2) {
-            printf("word1: %s %d\n", word1f,param1);
+            //printf("word1: %s %d\n", word1f,param1);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
 		            res1 = functionsTA[i](data_c[0], param1);
-		            printf("_res1: %f\n",res1);
+		            //printf("_res1: %f\n",res1);
 		            break;
 		        }
 		    }
         } else {
-            printf("word1: %s\n", word1);
+            //printf("word1: %s\n", word1);
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word1) == 0) {
 		            res1 = data_c[0][i];
-		            printf("_%s: %f\n",word1,res1);
+		            //printf("_%s: %f\n",word1,res1);
 		            break;
 		        }
 		    }
         }
         if (m2==2) {
-            printf("word2: %s %d\n", word2f,param2);
+            //printf("word2: %s %d\n", word2f,param2);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
 		            res2 = functionsTA[i](data_c[0], param2);
-		            printf("_res2: %f\n",res2);
+		            //printf("_res2: %f\n",res2);
 		            break;
 		        }
 		    }
         } else {
-            printf("word2: %s\n", word2);
+            //printf("word2: %s\n", word2);
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word2) == 0) {
 		            res2 = data_c[0][i];
-		            printf("_%s: %f\n",word2,res2);
+		            //printf("_%s: %f\n",word2,res2);
 		            break;
 		        }
 		    }
         }
         if (m3==2) {
-            printf("word3: %s %d\n", word3f,param3);
+            //printf("word3: %s %d\n", word3f,param3);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word3f) == 0) {
 		            res3 = functionsTA[i](data_c[0], param3);
-		            printf("_res3: %f\n",res3);
+		            //printf("_res3: %f\n",res3);
 		            break;
 		        }
 		    }
         } else {
-            printf("word3: %s\n", word3);
+            //printf("word3: %s\n", word3);
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word3) == 0) {
 		            res3 = data_c[0][i];
-		            printf("_%s: %f\n",word3,res3);
+		            //printf("_%s: %f\n",word3,res3);
 		            break;
 		        }
 		    }
         }
-        printf("separator1: %c\n", separator1);
-        printf("separator2: %c\n", separator2);
+        //printf("separator1: %c\n", separator1);
+        //printf("separator2: %c\n", separator2);
 
         if      (separator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
         else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}

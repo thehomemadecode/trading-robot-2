@@ -271,15 +271,21 @@ async def get_data(baseurl,dbcon,data):
                     dbcon.commit()
                 print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}")
                 # start ---- > trobot C module < ----------------------------------------------------
+                filename = "config.ini"
+                config = init_config(filename)
+                allrules = init_rules(config['rules'])
+                analysisrule = allrules[0][1]
+                cols = [0,1,2,3,4,5]
+                res = tr.receptionP(data[4],cols,analysisrule)
+                for r in res:
+                    print("receptionP:",round(r,4),end=" ")
+                print("")
+                '''
                 res = tr.cryptocurrencyGateA(data,3)
                 signal = res[0]
                 if (signal>0):
                     print(data[0], data[1], data[2], data[3], end=" ")
                     print("cryptocurrencyGateA",res[0],round(res[1],4))
-                '''
-                filename = "config.ini"
-                config = init_config(filename)
-                allrules = init_rules(config['rules'])
                 '''
                 # end ------ > trobot C module < ----------------------------------------------------
         print(f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
