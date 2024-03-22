@@ -9,14 +9,28 @@
 #define ET '='
 
 /* TA functions section begin */
-double sma(double a[], int len) {
-    double res = a[3]+len;
-	return res;
+double sma(double **a, int len) {
+	double sma = 0;
+	for (int e=0;e<len;e++) {
+		//printf("%d %d %f\n",e,len,a[e][3]);
+		sma += a[e][3];
+	}
+	sma = sma/len;
+	return sma;
 }
-double ema(double a[], int len) {
-    double res = a[3]+len;
-	return res;
+double ema(double **a, int len) {
+	double multiplier = 2.0 / (len + 1);
+	double ema = a[len][3];
+	printf("ema: %f\n",ema);
+	for (int e=len-1;e>=0;--e) {
+	//for (int e=0;e<len;e++) {
+		//ema = ema + ((a[e][3]-ema)*multiplier);
+		ema = (a[e][3] * multiplier) + (ema * (1-multiplier));
+		//printf("%d %d %f\n",e,len,a[e][3]);
+	}
+	return ema;
 }
+/*
 double wma(double a[], int len) {
     double res = a[3]+len;
 	return res;
@@ -25,11 +39,14 @@ double hma(double a[], int len) {
     double res = a[3]+len;
 	return res;
 }
+*/
 /* TA functions section end */
 
 /* function map section begin */
-const char *functionsTAlist[4] = {"sma", "ema", "wma", "hma"};
-double (*functionsTA[])(double[], int) = {sma, ema, wma, hma};
+//const char *functionsTAlist[4] = {"sma", "ema", "wma", "hma"};
+//double (*functionsTA[])(double**, int) = {sma, ema, wma, hma};
+const char *functionsTAlist[2] = {"sma", "ema"};
+double (*functionsTA[])(double**, int) = {sma, ema};
 /* function map section end */
 
 /* Reception function for incoming data: */
@@ -86,7 +103,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             //printf("word1: %s %d\n", word1f,param1);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
-		            res1 = functionsTA[i](data_c[0], param1);
+		            res1 = functionsTA[i](data_c, param1);
 		            //printf("_res1: %f\n",res1);
 		            break;
 		        }
@@ -105,7 +122,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             //printf("word2: %s %d\n", word2f,param2);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
-		            res2 = functionsTA[i](data_c[0], param2);
+		            res2 = functionsTA[i](data_c, param2);
 		            //printf("_res2: %f\n",res2);
 		            break;
 		        }
@@ -129,7 +146,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         
 		if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
 
-    } else if (matched == 5) {
+    } 
+	else if (matched == 5) {
         int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
         int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
         int m3 = sscanf(word3, "%[^(](%d)", word3f, &param3);
@@ -138,7 +156,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             //printf("word1: %s %d\n", word1f,param1);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
-		            res1 = functionsTA[i](data_c[0], param1);
+		            res1 = functionsTA[i](data_c, param1);
 		            //printf("_res1: %f\n",res1);
 		            break;
 		        }
@@ -157,7 +175,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             //printf("word2: %s %d\n", word2f,param2);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
-		            res2 = functionsTA[i](data_c[0], param2);
+		            res2 = functionsTA[i](data_c, param2);
 		            //printf("_res2: %f\n",res2);
 		            break;
 		        }
@@ -176,7 +194,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             //printf("word3: %s %d\n", word3f,param3);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word3f) == 0) {
-		            res3 = functionsTA[i](data_c[0], param3);
+		            res3 = functionsTA[i](data_c, param3);
 		            //printf("_res3: %f\n",res3);
 		            break;
 		        }
