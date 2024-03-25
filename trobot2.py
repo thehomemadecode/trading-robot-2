@@ -25,8 +25,8 @@ def init_config(filename):
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
-            elif '=' in line and current_section and not line.startswith('#'):
-                key, value = line.split('=')
+            elif ':' in line and current_section and not line.startswith('#'):
+                key, value = line.split(':')
                 config[current_section][key.strip()] = value.strip()
     file.close()
     return config
@@ -209,11 +209,11 @@ def db_read(dbcon):
     return selecteddata
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,dbcon,data):
-    renk = random.sample(FORES,k=1)
-    stil = random.sample(STYLES,k=1)
-    renk = renk[0]
-    stil = stil[0]    
+async def get_data(baseurl,dbcon,col,data):
+    clor = random.sample(FORES,k=1)
+    styl = random.sample(STYLES,k=1)
+    clor = clor[0]
+    styl = styl[0]    
     barsymbol = data[0]
     symbol = data[0].lower()
     klinestarttimedata = int(data[2])
@@ -221,91 +221,101 @@ async def get_data(baseurl,dbcon,data):
     prefix = data[3]
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
     dbcur = dbcon.cursor()
-    async with websockets.connect(url,max_queue=1) as websocket:
-        olddata = ""
-        sayac = 0
-        while True:
-            newdata = await websocket.recv()
-            newdata = json.loads(newdata)
-            closeprice = newdata['k']['c']
-            websocketklineopentime = newdata['k']['t']         
-            websocketklineopentime = int(websocketklineopentime/1000)
-            if (olddata != closeprice):
-                # start ---- > updating datasend < ----------------------------------------------------
-                data[4][0] = [newdata['k']['o'], newdata['k']['h'], newdata['k']['l'], newdata['k']['c'], newdata['k']['v'], newdata['k']['q']]
-                # end ------ > updating datasend < ----------------------------------------------------   
-                olddata = closeprice
-                timediff = websocketklineopentime-klinestarttimedata
-                timestr = datetime.now().isoformat()[11:23]
-                if (timediff > 0):
-                    klinechangedmessage=f"kline is changed: {timediff}"
-                else:
-                    klinechangedmessage="-"
-                sayac += 1
-                if (sayac>50):break # stop 
-                if (timediff != 0):
-                    dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
-                    dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
-                    last_records = dbcur.fetchall()
-                    for record in last_records:
-                        sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
-                        #print(sql)
-                        dbcur.execute(sql)
-                    dbcon.commit()                    
-                    klimit = int(timediff/(timetable[graphtimeperiod]*60))
-                    klimit += 1
-                    bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
+    try:
+        async with websockets.connect(url,max_queue=1) as websocket:
+            olddata = ""
+            sayac = 0
+            while True:
+                newdata = await websocket.recv()
+                newdata = json.loads(newdata)
+                closeprice = newdata['k']['c']
+                websocketklineopentime = newdata['k']['t']         
+                websocketklineopentime = int(websocketklineopentime/1000)
+                state = -1
+                if (olddata != closeprice):
                     # start ---- > updating datasend < ----------------------------------------------------
-                    data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
-                    data[4] = [[bars[1][1], bars[1][2], bars[1][3], bars[1][4], bars[1][5], bars[1][7]]] + data[4]
-                    # end ------ > updating datasend < ----------------------------------------------------
-                    sql1 = f"INSERT INTO {dbtable} "
-                    sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
-                    for bar in bars:
-                        klinestarttimedata = int(bar[0]/1000)
-                        arrayb = bar
-                        # reshape arrayb
-                        sql3 = ",".join(str(x) for x in arrayb)
-                        sql = sql1+sql2+f"VALUES({sql3})"
-                        dbcur.execute(sql)
-                    dbcon.commit()
-                print(renk+stil+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}")
-                # start ---- > trobot C module < ----------------------------------------------------
-                filename = "config.ini"
-                config = init_config(filename)
-                allrules = init_rules(config['rules'])
-                analysisrule = allrules[0][1]
-                cols = [0,1,2,3,4,5]
-                res = tr.receptionP(data[4],cols,analysisrule)
-                for r in res:
-                    print("receptionP:",round(r,4),end=" ")
-                print("")
-                '''
-                res = tr.cryptocurrencyGateA(data,3)
-                signal = res[0]
-                if (signal>0):
-                    print(data[0], data[1], data[2], data[3], end=" ")
-                    print("cryptocurrencyGateA",res[0],round(res[1],4))
-                '''
-                # end ------ > trobot C module < ----------------------------------------------------
-        print(f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
-
+                    data[4][0] = [newdata['k']['o'], newdata['k']['h'], newdata['k']['l'], newdata['k']['c'], newdata['k']['v'], newdata['k']['q']]
+                    # end ------ > updating datasend < ----------------------------------------------------   
+                    olddata = closeprice
+                    timediff = websocketklineopentime-klinestarttimedata
+                    timestr = datetime.now().isoformat()[11:23]
+                    if (timediff > 0):
+                        klinechangedmessage=f"kline is changed: {timediff}"
+                    else:
+                        klinechangedmessage="-"
+                    sayac += 1
+                    if (sayac>200):break # stop 
+                    if (timediff != 0):
+                        dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
+                        dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
+                        last_records = dbcur.fetchall()
+                        for record in last_records:
+                            sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
+                            #print(sql)
+                            dbcur.execute(sql)
+                        dbcon.commit()                    
+                        klimit = int(timediff/(timetable[graphtimeperiod]*60))
+                        klimit += 1
+                        bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
+                        # start ---- > updating datasend < ----------------------------------------------------
+                        data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
+                        data[4] = [[bars[1][1], bars[1][2], bars[1][3], bars[1][4], bars[1][5], bars[1][7]]] + data[4]
+                        # end ------ > updating datasend < ----------------------------------------------------
+                        sql1 = f"INSERT INTO {dbtable} "
+                        sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
+                        for bar in bars:
+                            klinestarttimedata = int(bar[0]/1000)
+                            arrayb = bar
+                            # reshape arrayb
+                            sql3 = ",".join(str(x) for x in arrayb)
+                            sql = sql1+sql2+f"VALUES({sql3})"
+                            dbcur.execute(sql)
+                        dbcon.commit()
+                    # start ---- > trobot C module < ----------------------------------------------------
+                    filename = "config.ini"
+                    config = init_config(filename)
+                    allrules = init_rules(config['rules'])
+                    analysisrule = allrules[0][1]
+                    res = tr.receptionP(data[4],col,analysisrule)
+                    
+                    if state==0 and res:
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
+                        state = 1
+                    if not res and state==1:
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
+                        state = 0
+                    
+                    '''
+                    if (res):
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
+                    else:
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
+                    '''
+                    '''
+                    for r in res:
+                        print("receptionP:",round(r,4),end=" ")
+                    print("")
+                    '''
+                    # end ------ > trobot C module < ----------------------------------------------------
+            print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
+    except Exception as err:
+        print(clor+styl,symbol,graphtimeperiod,type(err).__name__, err)
 async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     from binance.spot import Spot as Clientws
     clientws = Clientws(base_url=baseurl)
     bars = clientws.klines(barsymbol, graphtimeperiod, limit = klimit)
     return bars
 
-async def worker(baseurl,dbcon,selecteddata,s,f):
+async def worker(baseurl,dbcon,col,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,dbcon,data) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,col,data) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(baseurl,dbfilename,selecteddata,s,f):
+def dowork(baseurl,dbfilename,col,selecteddata,s,f):
     dbcon = dbconnect(dbfilename)
-    asyncio.run(worker(baseurl,dbcon,selecteddata,s,f))
+    asyncio.run(worker(baseurl,dbcon,col,selecteddata,s,f))
     dbcon.close()
 # ----------------------------------------------------------------------------------------------
 
@@ -318,7 +328,8 @@ def main():
     #statustypes = eval(config['trobot Inputs']['statustypes'])
     #alldatafilename = config['trobot Inputs']['alldatafilename']
     #prefix = config['trobot Inputs']['prefix']
-    #ohlvcq = config['trobot Inputs']['ohlvcq']
+    ohlvcq = config['trobot Inputs']['ohlvcq']
+    col = letter_to_number(ohlvcq)
     #fx = fxtypes[1]
     #status = statustypes[1]
     #graphtimeperiod = graphtimeperiodlist[0]
@@ -347,25 +358,25 @@ def main():
     tasknum = tdivide
     if (tremind>0):tasknum += 1
     tremind -= 1
-    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,0,tasknum))
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,0,tasknum))
 
     baseurl = "https://api1.binance.com"
     tasknum2 = tasknum + tdivide
     if (tremind>0):tasknum2 += 1
     tremind -= 1
-    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,tasknum,tasknum2))
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum,tasknum2))
     
     baseurl = "https://api2.binance.com"
     tasknum3 = tasknum2 + tdivide
     if (tremind>0):tasknum3 += 1
     tremind -= 1
-    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,tasknum2,tasknum3))
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum2,tasknum3))
     
     baseurl = "https://api3.binance.com"
     tasknum4 = tasknum3 + tdivide
     if (tremind>0):tasknum4 += 1
     tremind -= 1
-    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,selecteddata,tasknum3,tasknum4))
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum3,tasknum4))
     
     '''
     print(0,tasknum)

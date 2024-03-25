@@ -10,8 +10,8 @@ def init_config(filename):
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
-            elif '=' in line and current_section and not line.startswith('#'):
-                key, value = line.split('=')
+            elif ':' in line and current_section and not line.startswith('#'):
+                key, value = line.split(':')
                 config[current_section][key.strip()] = value.strip()
     file.close()
     return config

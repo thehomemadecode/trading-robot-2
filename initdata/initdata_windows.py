@@ -7,7 +7,7 @@ def main():
 
     cmd4 = 'copy alldata.txt ..\.'
     cmd5 = 'copy candlestick.db ..\.'
-    cmd6 = 'cp config.ini ..\.'
+    cmd6 = 'copy config.ini ..\.'
 
     os.system(cmd1)
     os.system(cmd2)

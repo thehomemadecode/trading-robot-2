@@ -12,8 +12,8 @@ def init_config(filename):
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
-            elif '=' in line and current_section and not line.startswith('#'):
-                key, value = line.split('=')
+            elif ':' in line and current_section and not line.startswith('#'):
+                key, value = line.split(':')
                 config[current_section][key.strip()] = value.strip()
     file.close()
     return config
@@ -96,7 +96,7 @@ def main():
             #symbolTable[1][i].append(bars)
             #i += 1
         s += 1
-        print("----",s,say,"-----------------------")
+        print("---- asset:",s,"period:",say,"-----------------------")
         #time.sleep(1)
         if s==limit:break # temporary limiter
     print(s)
