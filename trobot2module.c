@@ -30,21 +30,9 @@ double ema(double **a, int col, int len) {
 	}
 	return ema;
 }
-/*
-double wma(double a[], int len) {
-    double res = a[3]+len;
-	return res;
-}
-double hma(double a[], int len) {
-    double res = a[3]+len;
-	return res;
-}
-*/
 /* TA functions section end */
 
 /* function map section begin */
-//const char *functionsTAlist[4] = {"sma", "ema", "wma", "hma"};
-//double (*functionsTA[])(double**, int) = {sma, ema, wma, hma};
 const char *functionsTAlist[2] = {"sma", "ema"};
 double (*functionsTA[])(double**, int, int) = {sma, ema};
 /* function map section end */
@@ -72,15 +60,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
             data_c[i][j] = PyFloat_AsDouble(item);
         }
     }
-	/*
-	// --> cols_c[i]
-    Py_ssize_t len_cols = PyList_Size(cols);
-    double *cols_c = malloc(len_cols * sizeof(double *));
-    for (Py_ssize_t i=0; i<len_cols; i++) {
-        PyObject *item = PyList_GetItem(cols, i);
-        cols_c[i] = (int)PyLong_AsLong(item);
-    }
-	*/
+
 	// --> analysisrule 'atoms'
 	PyObject* analysisrulePy = PyUnicode_AsUTF8String(analysisrule);
 	char* analysisruleC = PyBytes_AsString(analysisrulePy);
@@ -104,7 +84,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word1f) == 0) {
 		            res1 = functionsTA[i](data_c, col, param1);
-		            printf("_res1: %f\n",res1);
+		            //printf("_res1: %f\n",res1);
 		            break;
 		        }
 		    }
@@ -114,19 +94,20 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word1) == 0) {
 		            res1 = data_c[0][i];
-		            printf("_%s: %f\n",word1,res1);
+		            //printf("_%s: %f\n",word1,res1);
 		            numberv = 0;
 		            break;
 		        }
 		    }
-		    if (numberv) {sscanf(word1, "%lf", &res1);printf("numberv res1: %f\n",res1);}
+		    if (numberv) {sscanf(word1, "%lf", &res1);//printf("numberv res1: %f\n",res1);
+			}
         }
         if (m2==2) {
             //printf("word2: %s %d\n", word2f,param2);
 		    for (int i = 0; i < 4; ++i) {
 		        if (strcmp(functionsTAlist[i], word2f) == 0) {
 		            res2 = functionsTA[i](data_c, col, param2);
-		            printf("_res2: %f\n",res2);
+		            //printf("_res2: %f\n",res2);
 		            break;
 		        }
 		    }
@@ -136,12 +117,13 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    for (int i = 0; i < 6; ++i) {
 		        if (strcmp(ohlclist[i], word2) == 0) {
 		            res2 = data_c[0][i];
-		            printf("_%s: %f\n",word2,res2);
+		            //printf("_%s: %f\n",word2,res2);
 		            numberv = 0;
 		            break;
 		        }
 		    }
-		    if (numberv) {sscanf(word2, "%lf", &res2);printf("numberv res2: %f\n",res2);}
+		    if (numberv) {sscanf(word2, "%lf", &res2);//printf("numberv res2: %f\n",res2);
+			}
         }
         //printf("separator1: %c\n", separator1);
 
@@ -149,7 +131,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
         else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
         else {result = FALSE;}
-		if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
+		//if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
 
     } 
 	else if (matched == 5) {
@@ -177,7 +159,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		            break;
 		        }
 		    }
-		    if (numberv) {sscanf(word1, "%lf", &res1);printf("numberv res1: %f\n",res1);}
+		    if (numberv) {sscanf(word1, "%lf", &res1);//printf("numberv res1: %f\n",res1);
+			}
         }
         if (m2==2) {
             //printf("word2: %s %d\n", word2f,param2);
@@ -199,7 +182,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		            break;
 		        }
 		    }
-		    if (numberv) {sscanf(word2, "%lf", &res2);printf("numberv res2: %f\n",res2);}
+		    if (numberv) {sscanf(word2, "%lf", &res2);//printf("numberv res2: %f\n",res2);
+			}
         }
         if (m3==2) {
             //printf("word3: %s %d\n", word3f,param3);
@@ -221,7 +205,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		            break;
 		        }
 		    }
-		    if (numberv) {sscanf(word3, "%lf", &res3);printf("numberv res3: %f\n",res3);}
+		    if (numberv) {sscanf(word3, "%lf", &res3);//printf("numberv res3: %f\n",res3);
+			}
         }
         //printf("separator1: %c\n", separator1);
         //printf("separator2: %c\n", separator2);
@@ -237,16 +222,9 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
         else {result2 = FALSE;}
 
         result = result && result2;
-        if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
+        //if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
 
     }
-	/*
-	int selected_functions[2];
-	selected_functions[0] = 0;
-	selected_functions[1] = 1;
-	double res1 = functionsTA[selected_functions[0]](data_c[0], 2);
-	double res2 = functionsTA[selected_functions[1]](data_c[0], 3);
-	*/
 	/*
 	if (matched == 3) {
 		return Py_BuildValue("dd", res1, res2);

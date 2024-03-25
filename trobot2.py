@@ -277,14 +277,15 @@ async def get_data(baseurl,dbcon,col,data):
                     allrules = init_rules(config['rules'])
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
-                    
+                    print(res,symbol)
+                    '''
                     if state==0 and res:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
                         state = 1
                     if not res and state==1:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
                         state = 0
-                    
+                    '''
                     '''
                     if (res):
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
@@ -298,6 +299,14 @@ async def get_data(baseurl,dbcon,col,data):
                     '''
                     # end ------ > trobot C module < ----------------------------------------------------
             print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
+    except websockets.exceptions.ConnectionClosed:
+        print(symbol,"Connection closed. Reconnecting...")
+        await asyncio.sleep(2)
+        await get_data(baseurl,dbcon,col,data)
+    except asyncio.TimeoutError:
+        print(symbol,"Connection timed out. Reconnecting...")
+        await asyncio.sleep(2)
+        await get_data(baseurl,dbcon,col,data)
     except Exception as err:
         print(clor+styl,symbol,graphtimeperiod,type(err).__name__, err)
 async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
