@@ -209,32 +209,51 @@ def db_read(dbcon):
     return selecteddata
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,dbcon,col,data):
+async def get_data(baseurl,dbcon,col,data,errstate):
     clor = random.sample(FORES,k=1)
     styl = random.sample(STYLES,k=1)
     clor = clor[0]
-    styl = styl[0]    
+    styl = styl[0]
+    
     barsymbol = data[0]
-    symbol = data[0].lower()
-    klinestarttimedata = int(data[2])
     graphtimeperiod = data[1]
+    klinestarttimedata = int(data[2])
+    
+    print(barsymbol,"\t",errstate,"\t",klinestarttimedata)
+    
+    
     prefix = data[3]
+    
+    symbol = data[0].lower()
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
     dbcur = dbcon.cursor()
+    '''
+    if (errstate==1):
+        print(symbol,"error state set")
+    else:
+        print(symbol,"error state NOT set")
+    '''
     try:
-        async with websockets.connect(url,max_queue=1) as websocket:
+        async with websockets.connect(url,max_queue=1,timeout=600) as websocket:
             olddata = ""
-            sayac = 0
+
+            if (errstate==0):
+                sayac = 0
+            if (errstate==1):
+                sayac = sayac2
+                errstate = 0
+
             while True:
                 newdata = await websocket.recv()
                 newdata = json.loads(newdata)
                 closeprice = newdata['k']['c']
                 websocketklineopentime = newdata['k']['t']         
                 websocketklineopentime = int(websocketklineopentime/1000)
-                state = -1
+                #state = -1
                 if (olddata != closeprice):
                     # start ---- > updating datasend < ----------------------------------------------------
                     data[4][0] = [newdata['k']['o'], newdata['k']['h'], newdata['k']['l'], newdata['k']['c'], newdata['k']['v'], newdata['k']['q']]
+                    data[2] = websocketklineopentime
                     # end ------ > updating datasend < ----------------------------------------------------   
                     olddata = closeprice
                     timediff = websocketklineopentime-klinestarttimedata
@@ -244,14 +263,14 @@ async def get_data(baseurl,dbcon,col,data):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    if (sayac>200):break # stop 
+                    sayac2 = sayac
+                    if (sayac>100):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                         dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
                         last_records = dbcur.fetchall()
                         for record in last_records:
                             sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
-                            #print(sql)
                             dbcur.execute(sql)
                         dbcon.commit()                    
                         klimit = int(timediff/(timetable[graphtimeperiod]*60))
@@ -260,6 +279,7 @@ async def get_data(baseurl,dbcon,col,data):
                         # start ---- > updating datasend < ----------------------------------------------------
                         data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
                         data[4] = [[bars[1][1], bars[1][2], bars[1][3], bars[1][4], bars[1][5], bars[1][7]]] + data[4]
+                        data[2] = int(bars[0][0])/1000
                         # end ------ > updating datasend < ----------------------------------------------------
                         sql1 = f"INSERT INTO {dbtable} "
                         sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
@@ -271,13 +291,13 @@ async def get_data(baseurl,dbcon,col,data):
                             sql = sql1+sql2+f"VALUES({sql3})"
                             dbcur.execute(sql)
                         dbcon.commit()
+
                     # start ---- > trobot C module < ----------------------------------------------------
                     filename = "config.ini"
                     config = init_config(filename)
                     allrules = init_rules(config['rules'])
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
-                    print(res,symbol)
                     '''
                     if state==0 and res:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
@@ -286,9 +306,10 @@ async def get_data(baseurl,dbcon,col,data):
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
                         state = 0
                     '''
-                    '''
-                    if (res):
+                    
+                    if (res and errstate):
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
+                    '''
                     else:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
                     '''
@@ -300,15 +321,20 @@ async def get_data(baseurl,dbcon,col,data):
                     # end ------ > trobot C module < ----------------------------------------------------
             print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
     except websockets.exceptions.ConnectionClosed:
-        print(symbol,"Connection closed. Reconnecting...")
+        #import sys
+        #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
+        #print(f"{symbol}\t\tConnection closed. Reconnecting...")
         await asyncio.sleep(2)
-        await get_data(baseurl,dbcon,col,data)
+        await get_data(baseurl,dbcon,col,data,1)
     except asyncio.TimeoutError:
-        print(symbol,"Connection timed out. Reconnecting...")
+        #import sys
+        #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
+        #print(f"{symbol}\t\tConnection timed out. Reconnecting...")
         await asyncio.sleep(2)
-        await get_data(baseurl,dbcon,col,data)
+        await get_data(baseurl,dbcon,col,data,1)
     except Exception as err:
         print(clor+styl,symbol,graphtimeperiod,type(err).__name__, err)
+
 async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     from binance.spot import Spot as Clientws
     clientws = Clientws(base_url=baseurl)
@@ -319,7 +345,8 @@ async def worker(baseurl,dbcon,col,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,dbcon,col,data) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,col,data,0) for data in partedselecteddata]
+    #tasks = [get_data(baseurl, dbcon, col, data, index) for index, data in enumerate(partedselecteddata)]
     await asyncio.gather(*tasks)
 
 def dowork(baseurl,dbfilename,col,selecteddata,s,f):
@@ -351,6 +378,7 @@ def main():
     client = Spot()
     temp = db_check(dbcon,client)
     failedtables = consistency_db_check(dbcon)
+    exit()
     temp = refresh_failedtables(dbcon,failedtables,client,maxklines)
     selecteddata = db_read(dbcon)
     dbcon.close()
@@ -362,7 +390,7 @@ def main():
     tremind = tasks % 4
     
     #print(tasks,tdivide,tremind)
-   
+    
     baseurl = "https://api.binance.com"
     tasknum = tdivide
     if (tremind>0):tasknum += 1
@@ -387,13 +415,11 @@ def main():
     tremind -= 1
     p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum3,tasknum4))
     
-    '''
-    print(0,tasknum)
-    print(tasknum,tasknum2)
-    print(tasknum2,tasknum3)
-    print(tasknum3,tasknum4)
-    '''
-    
+    #print(0,tasknum)
+    #print(tasknum,tasknum2)
+    #print(tasknum2,tasknum3)
+    #print(tasknum3,tasknum4)
+        
     p1.start()
     p2.start()
     p3.start()
@@ -415,11 +441,6 @@ def main():
                 print(data[col])
     #print(bar,end=" ")
     #print("")
-    '''
-    '''
-    col = letter_to_number(ohlvcq)
-    result = tr.cryptocurrencyGate(selecteddata,col,allrules)
-    print(result,len(result))
     '''
 
 # most probably main
