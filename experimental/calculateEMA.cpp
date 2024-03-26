@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define PERIOD 5 // Periyot sayýsý
+#define PERIOD 5
 
 float calculateEMA(float currentPrice, float previousEMA) {
     float k = 2.0 / (PERIOD + 1);
@@ -9,11 +9,11 @@ float calculateEMA(float currentPrice, float previousEMA) {
 
 int main() {
     float prices[] = {3437.00,3441.22,3433.01,3436.67,3434.12,3433.00,3405.19,3416.08,3415.86,3410.00};
-    float ema = prices[0]; // Ýlk EMA deðeri, baþlangýç deðeri olarak ilk fiyat alýnýr.
+    float ema = prices[0];
 
-    printf("EMA0: %.2f\n", ema); // Baþlangýç deðeri yazdýrýlýr.
+    printf("EMA0: %.2f\n", ema);
 
-    // Diðer fiyatlar üzerinden EMA hesaplanýr ve yazdýrýlýr.
+    
     for (int i = 1; i < sizeof(prices) / sizeof(prices[0]); i++) {
         ema = calculateEMA(prices[i], ema);
         printf("EMA%d: %.2f\n", i, ema);
@@ -21,5 +21,3 @@ int main() {
 
     return 0;
 }
-
-//results: 3425.0167 results: 3410.0 results: 3421.723
