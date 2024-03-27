@@ -121,7 +121,7 @@ def db_check(dbcon,client):
                 sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
                 sql = sql1+sql2+f"VALUES({sql3})"
-                time3 = int(bars[b][0]/1000)
+                #time3 = int(bars[b][0]/1000)
                 #print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time3)),end=" ")
                 dbcur.execute(sql)
             dbcon.commit()
@@ -209,7 +209,7 @@ def db_read(dbcon):
     return selecteddata
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,dbcon,col,data,errstate):
+async def get_data(baseurl,dbcon,col,data,sayac,errstate):
     clor = random.sample(FORES,k=1)
     styl = random.sample(STYLES,k=1)
     clor = clor[0]
@@ -218,44 +218,31 @@ async def get_data(baseurl,dbcon,col,data,errstate):
     barsymbol = data[0]
     graphtimeperiod = data[1]
     klinestarttimedata = int(data[2])
-    
-    print(barsymbol,"\t",errstate,"\t",klinestarttimedata)
-    
-    
     prefix = data[3]
     
     symbol = data[0].lower()
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
     dbcur = dbcon.cursor()
-    '''
-    if (errstate==1):
-        print(symbol,"error state set")
-    else:
-        print(symbol,"error state NOT set")
-    '''
     try:
         async with websockets.connect(url,max_queue=1,timeout=600) as websocket:
             olddata = ""
-
-            if (errstate==0):
-                sayac = 0
-            if (errstate==1):
-                sayac = sayac2
-                errstate = 0
-
             while True:
                 newdata = await websocket.recv()
                 newdata = json.loads(newdata)
                 closeprice = newdata['k']['c']
                 websocketklineopentime = newdata['k']['t']         
                 websocketklineopentime = int(websocketklineopentime/1000)
-                #state = -1
                 if (olddata != closeprice):
                     # start ---- > updating datasend < ----------------------------------------------------
                     data[4][0] = [newdata['k']['o'], newdata['k']['h'], newdata['k']['l'], newdata['k']['c'], newdata['k']['v'], newdata['k']['q']]
                     data[2] = websocketklineopentime
                     # end ------ > updating datasend < ----------------------------------------------------   
                     olddata = closeprice
+                    if (websocketklineopentime>=klinestarttimedata):
+                        print(symbol,websocketklineopentime,klinestarttimedata,"OK")
+                    else:
+                        print(symbol,websocketklineopentime,klinestarttimedata,"NOT OK <----------------")
+                        exit()
                     timediff = websocketklineopentime-klinestarttimedata
                     timestr = datetime.now().isoformat()[11:23]
                     if (timediff > 0):
@@ -263,7 +250,6 @@ async def get_data(baseurl,dbcon,col,data,errstate):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    sayac2 = sayac
                     if (sayac>100):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
@@ -275,11 +261,12 @@ async def get_data(baseurl,dbcon,col,data,errstate):
                         dbcon.commit()                    
                         klimit = int(timediff/(timetable[graphtimeperiod]*60))
                         klimit += 1
+                        print(symbol,timediff,klimit)
                         bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
                         # start ---- > updating datasend < ----------------------------------------------------
                         data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
                         data[4] = [[bars[1][1], bars[1][2], bars[1][3], bars[1][4], bars[1][5], bars[1][7]]] + data[4]
-                        data[2] = int(bars[0][0])/1000
+                        data[2] = int(bars[1][0]/1000)
                         # end ------ > updating datasend < ----------------------------------------------------
                         sql1 = f"INSERT INTO {dbtable} "
                         sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
@@ -298,6 +285,14 @@ async def get_data(baseurl,dbcon,col,data,errstate):
                     allrules = init_rules(config['rules'])
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
+
+                    if errstate:
+                        print(clor+styl+f"{sayac}:{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\t{errstate}")
+                        errstate = 0
+                    else:
+                        pass
+                        #print(clor+styl+f"{sayac}:{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\t{errstate}")
+
                     '''
                     if state==0 and res:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
@@ -306,10 +301,9 @@ async def get_data(baseurl,dbcon,col,data,errstate):
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
                         state = 0
                     '''
-                    
-                    if (res and errstate):
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
                     '''
+                    if (res):
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
                     else:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
                     '''
@@ -325,13 +319,13 @@ async def get_data(baseurl,dbcon,col,data,errstate):
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
         #print(f"{symbol}\t\tConnection closed. Reconnecting...")
         await asyncio.sleep(2)
-        await get_data(baseurl,dbcon,col,data,1)
+        await get_data(baseurl,dbcon,col,data,sayac,1)
     except asyncio.TimeoutError:
         #import sys
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
         #print(f"{symbol}\t\tConnection timed out. Reconnecting...")
         await asyncio.sleep(2)
-        await get_data(baseurl,dbcon,col,data,1)
+        await get_data(baseurl,dbcon,col,data,sayac,1)
     except Exception as err:
         print(clor+styl,symbol,graphtimeperiod,type(err).__name__, err)
 
@@ -345,7 +339,7 @@ async def worker(baseurl,dbcon,col,selecteddata,s,f):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,dbcon,col,data,0) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,col,data,0,0) for data in partedselecteddata]
     #tasks = [get_data(baseurl, dbcon, col, data, index) for index, data in enumerate(partedselecteddata)]
     await asyncio.gather(*tasks)
 
@@ -378,7 +372,7 @@ def main():
     client = Spot()
     temp = db_check(dbcon,client)
     failedtables = consistency_db_check(dbcon)
-    exit()
+    #exit()
     temp = refresh_failedtables(dbcon,failedtables,client,maxklines)
     selecteddata = db_read(dbcon)
     dbcon.close()
