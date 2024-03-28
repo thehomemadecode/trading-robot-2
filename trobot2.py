@@ -238,11 +238,13 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     data[2] = websocketklineopentime
                     # end ------ > updating datasend < ----------------------------------------------------   
                     olddata = closeprice
+                    '''
                     if (websocketklineopentime>=klinestarttimedata):
                         print(symbol,websocketklineopentime,klinestarttimedata,"OK")
                     else:
                         print(symbol,websocketklineopentime,klinestarttimedata,"NOT OK <----------------")
                         exit()
+                    '''
                     timediff = websocketklineopentime-klinestarttimedata
                     timestr = datetime.now().isoformat()[11:23]
                     if (timediff > 0):
@@ -250,7 +252,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    if (sayac>100):break # stop 
+                    if (sayac>25):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                         dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -261,7 +263,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                         dbcon.commit()                    
                         klimit = int(timediff/(timetable[graphtimeperiod]*60))
                         klimit += 1
-                        print(symbol,timediff,klimit)
+                        #print(symbol,timediff,klimit)
                         bars = await get_klines(baseurl, barsymbol, graphtimeperiod, klimit)
                         # start ---- > updating datasend < ----------------------------------------------------
                         data[4][0] = [bars[0][1], bars[0][2], bars[0][3], bars[0][4], bars[0][5], bars[0][7]]
@@ -289,9 +291,6 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     if errstate:
                         print(clor+styl+f"{sayac}:{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\t{errstate}")
                         errstate = 0
-                    else:
-                        pass
-                        #print(clor+styl+f"{sayac}:{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\t{errstate}")
 
                     '''
                     if state==0 and res:
