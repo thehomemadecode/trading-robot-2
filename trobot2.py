@@ -1,3 +1,4 @@
+# trobot2 main body (28 Mar)
 import sqlite3
 import trobot2 as tr
 from binance.spot import Spot
@@ -14,7 +15,7 @@ from math import ceil, floor
 
 FORES = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE ]
 STYLES = [ Style.DIM, Style.NORMAL, Style.BRIGHT ]
-#CommentTest
+
 # read config.ini
 def init_config(filename):
     config = {}
@@ -94,29 +95,18 @@ def db_check(dbcon,client):
             outdatedbarnumber = (fark / (timetable[temp[2]]*60))
             outdatedbarnumber = int(ceil(outdatedbarnumber))
             if (outdatedbarnumber>500):outdatedbarnumber=500 # write a function delete older than kline500.
-            '''
-            print(time.strftime("%Y-%m-%d %H:%M:%S"),end=": ")
-            print(temp[1],temp[2],end=": ")
-            print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time1)),end=" ")
-            print(int(time1),end=" ")
-            print(int(time2),end=" ")
-            print(fark,outdatedbarnumber)
-            '''
             dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
             last_records = dbcur.fetchall()
             for record in last_records:
                 sql = f"DELETE FROM {dbtable} WHERE open_time={record[1]}"
-                #print(sql)
                 dbcur.execute(sql)
             dbcon.commit()
-
             sql1 = f"INSERT INTO {dbtable} "
             sql2 = f"(open_time, open, high, low, close, volume, close_time, quote_asset_volume, number_of_trades, taker_base_volume, taker_quote_volume, unused) "
             klimit = outdatedbarnumber + 1
             bars = client.klines(temp[1], temp[2], limit = klimit)
             for b in range(0,len(bars)):
                 arrayb = bars[b]
-                #print("arrayb",arrayb)
                 # reshape arrayb
                 sql3 = ",".join(str(x) for x in arrayb)
                 #print(sql3)
@@ -125,7 +115,6 @@ def db_check(dbcon,client):
                 #print(time.strftime("%d-%b-%Y %H:%M:%S", time.localtime(time3)),end=" ")
                 dbcur.execute(sql)
             dbcon.commit()
-            #print("")
         comp = round((100 * (progressc/progress)),1)
         print(f"db_check: {comp}%",dbtable,time1-time2,"          \r",end="")
     print("")
@@ -143,7 +132,6 @@ def consistency_db_check(dbcon):
         opentimes = dbcur.fetchall()
         before = int(opentimes[0][1])
         opentimes.pop(0)
-        #print(dbtable,"--> Check value:",chkval,"-->\t",end="\n")
         passcounter = len(opentimes)
         for ot in opentimes:
             after = int(ot[1])
@@ -214,12 +202,10 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
     styl = random.sample(STYLES,k=1)
     clor = clor[0]
     styl = styl[0]
-    
     barsymbol = data[0]
     graphtimeperiod = data[1]
     klinestarttimedata = int(data[2])
     prefix = data[3]
-    
     symbol = data[0].lower()
     url = f"wss://data-stream.binance.vision:443/ws/{symbol}@kline_{graphtimeperiod}"
     dbcur = dbcon.cursor()
@@ -287,25 +273,15 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     allrules = init_rules(config['rules'])
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
-
-                    if errstate:
-                        print(clor+styl+f"{sayac}:{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\t{errstate}")
-                        errstate = 0
-
-                    '''
-                    if state==0 and res:
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
-                        state = 1
-                    if not res and state==1:
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
-                        state = 0
-                    '''
-                    '''
                     if (res):
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
+                    '''
                     else:
                         print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
                     '''
+                    if errstate:
+                        print(clor+styl+f"error occurred on await websocket.recv()")
+                        errstate = 0
                     '''
                     for r in res:
                         print("receptionP:",round(r,4),end=" ")
@@ -339,7 +315,6 @@ async def worker(baseurl,dbcon,col,selecteddata,s,f):
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
     tasks = [get_data(baseurl,dbcon,col,data,0,0) for data in partedselecteddata]
-    #tasks = [get_data(baseurl, dbcon, col, data, index) for index, data in enumerate(partedselecteddata)]
     await asyncio.gather(*tasks)
 
 def dowork(baseurl,dbfilename,col,selecteddata,s,f):
@@ -352,7 +327,6 @@ def main():
     # read configs
     filename = "config.ini"
     config = init_config(filename)
-
     #fxtypes = eval(config['trobot Inputs']['fxtypes'])
     #statustypes = eval(config['trobot Inputs']['statustypes'])
     #alldatafilename = config['trobot Inputs']['alldatafilename']
@@ -371,10 +345,19 @@ def main():
     client = Spot()
     temp = db_check(dbcon,client)
     failedtables = consistency_db_check(dbcon)
-    #exit()
     temp = refresh_failedtables(dbcon,failedtables,client,maxklines)
     selecteddata = db_read(dbcon)
     dbcon.close()
+
+    '''
+    col = letter_to_number(ohlvcq)
+    for rowdata in selecteddata:
+        for datagroup in rowdata[3:]:
+            for data in datagroup:
+                print(data[col])
+    #print(bar,end=" ")
+    #print("")
+    '''
 
     just_fix_windows_console()
 
@@ -426,16 +409,6 @@ def main():
     p3.terminate()
     p4.terminate()
     
-    '''
-    col = letter_to_number(ohlvcq)
-    for rowdata in selecteddata:
-        for datagroup in rowdata[3:]:
-            for data in datagroup:
-                print(data[col])
-    #print(bar,end=" ")
-    #print("")
-    '''
-
 # most probably main
 if __name__ == '__main__':
     main()

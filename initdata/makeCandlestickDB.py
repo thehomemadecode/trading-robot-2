@@ -1,3 +1,4 @@
+# trobot2 makeCandlestickDB (28 Mar)
 import sqlite3
 
 # read config.ini
@@ -54,8 +55,9 @@ def main():
     statustypes = eval(config['trobot Inputs']['statustypes'])
     # settings vars
     alldatafilename = config['trobot Inputs']['alldatafilename']
-    fx = fxtypes[1]
-    status = statustypes[1]
+    fx = fxtypes[int(config['trobot Inputs']['fx'])]
+    status = statustypes[int(config['trobot Inputs']['status'])]
+    isMarginTradingAllowed = config['trobot Inputs']['isMarginTradingAllowed']
     graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
     prefix = config['trobot Inputs']['prefix']
     dbfilename = config['trobot Inputs']['dbfilename']
@@ -68,18 +70,58 @@ def main():
     file.close()
     alldata = eval(temp)
     symbollist = []
-    for i in alldata['symbols']:
-        if fx == "ALL" and status == "ALL":
-            symbollist.append(i['symbol'])
-        elif fx == "ALL" and status != "ALL":
-            if status == i['status']:
-                symbollist.append(i['symbol'])
-        elif fx != "ALL" and status == "ALL":
-            if fx == i['symbol'][-(len(fx)):]:
-                symbollist.append(i['symbol'])
-        elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
-            symbollist.append(i['symbol'])
     
+    # isMarginTradingAllowed & fx & status
+    if isMarginTradingAllowed == "BOTH":
+        for i in alldata['symbols']:
+            if fx == "ALL" and status == "ALL":
+                symbollist.append(i['symbol'])
+
+            elif fx == "ALL" and status != "ALL":
+                if status == i['status']:
+                    symbollist.append(i['symbol'])
+
+            elif fx != "ALL" and status == "ALL":
+                if fx == i['symbol'][-(len(fx)):]:
+                    symbollist.append(i['symbol'])
+
+            elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
+                symbollist.append(i['symbol'])
+
+    elif isMarginTradingAllowed == "TRUE":
+        for i in alldata['symbols']:
+            if i['isMarginTradingAllowed']:
+                if fx == "ALL" and status == "ALL":
+                    symbollist.append(i['symbol'])
+
+                elif fx == "ALL" and status != "ALL":
+                    if status == i['status']:
+                        symbollist.append(i['symbol'])
+
+                elif fx != "ALL" and status == "ALL":
+                    if fx == i['symbol'][-(len(fx)):]:
+                        symbollist.append(i['symbol'])
+
+                elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
+                    symbollist.append(i['symbol'])
+
+    elif isMarginTradingAllowed == "FALSE":
+        for i in alldata['symbols']:
+            if not i['isMarginTradingAllowed']:
+                if fx == "ALL" and status == "ALL":
+                    symbollist.append(i['symbol'])
+
+                elif fx == "ALL" and status != "ALL":
+                    if status == i['status']:
+                        symbollist.append(i['symbol'])
+
+                elif fx != "ALL" and status == "ALL":
+                    if fx == i['symbol'][-(len(fx)):]:
+                        symbollist.append(i['symbol'])
+
+                elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
+                    symbollist.append(i['symbol'])
+
     sqlite3ClearCreate(dbfilename)
     dbc = dbconnect(dbfilename)
     makeTables(dbc,symbollist,graphtimeperiodlist,prefix,limit)
