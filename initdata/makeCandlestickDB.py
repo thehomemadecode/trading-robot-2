@@ -49,11 +49,12 @@ def main():
     # read configs
     filename = "config.ini"
     config = init_config(filename)
-
     # settings const
     fxtypes = eval(config['trobot Inputs']['fxtypes'])
     statustypes = eval(config['trobot Inputs']['statustypes'])
     # settings vars
+    exclusions = eval(config['trobot Inputs']['exclusions'])
+    inclusions = eval(config['trobot Inputs']['inclusions'])
     alldatafilename = config['trobot Inputs']['alldatafilename']
     fx = fxtypes[int(config['trobot Inputs']['fx'])]
     status = statustypes[int(config['trobot Inputs']['status'])]
@@ -62,8 +63,8 @@ def main():
     prefix = config['trobot Inputs']['prefix']
     dbfilename = config['trobot Inputs']['dbfilename']
     limit = int(config['trobot Inputs']['assetlimit'])
-    
-    # show infos
+
+    # get alldata content
     file = open(alldatafilename, "r")
     for content in file:
         temp = content
@@ -71,7 +72,7 @@ def main():
     alldata = eval(temp)
     symbollist = []
     
-    # isMarginTradingAllowed & fx & status
+    # isMarginTradingAllowed & fx & status: populate symbollist
     if isMarginTradingAllowed == "BOTH":
         for i in alldata['symbols']:
             if fx == "ALL" and status == "ALL":
@@ -122,9 +123,62 @@ def main():
                 elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
                     symbollist.append(i['symbol'])
 
+    symbollist = symbollist[:limit]
+    
+    '''
+    print("exclusions:")
+    for e in exclusions:
+        print(e)
+    print("-----------------------")
+    print("inclusions:")
+    for i in inclusions:
+        print(i)
+    print("-----------------------")
+    print("symbollist:")
+    lc = 0
+    for s in symbollist:
+        print(lc,s)
+        lc += 1
+    print("-----------------------")
+    '''
+    
+    def eifinder(eisymbol,eisymbollist):
+        c = 1
+        for i in range(len(eisymbollist)):
+            if eisymbol == eisymbollist[i]:
+                return c
+            c += 1
+        return False
+    
+    for e in exclusions:
+        c = eifinder(e,symbollist)
+        if c:
+            del symbollist[c-1]
+    '''
+    print("symbollist:")
+    lc = 0
+    for s in symbollist:
+        print(lc,s)
+        lc += 1
+    print("-----------------------")
+    '''
+    for i in inclusions:
+        c = eifinder(i,symbollist)
+        if not c:
+            symbollist.insert(0, i)
+    '''
+    print("symbollist:")
+    lc = 0
+    for s in symbollist:
+        print(lc,s)
+        lc += 1
+    print("-----------------------")
+    '''
+    
     sqlite3ClearCreate(dbfilename)
     dbc = dbconnect(dbfilename)
     makeTables(dbc,symbollist,graphtimeperiodlist,prefix,limit)
+    
 
 # most probably main
 if __name__ == '__main__':
