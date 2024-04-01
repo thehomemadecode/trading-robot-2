@@ -51,13 +51,20 @@ def dateconvert(date):
 
 # return time periods
 timetable = {
-    "1m" :1,
-    "3m" :3,
-    "5m" :5,
-    "15m":15,
-    "1h" :60,
-    "4h" :240,
-    "1d" :1440
+    "1m"  :1,
+    "3m"  :3,
+    "5m"  :5,
+    "15m" :15,
+    "30m" :30,    
+    "1h"  :60,
+    "2h"  :120,
+    "4h"  :240,
+    "6h"  :360,
+    "8h"  :480,
+    "12h" :720,
+    "1d"  :1440,
+    "3d"  :4320,
+    "1w"  :10080
 }
 
 # convert OHLC letters to numbers, default:C
@@ -327,15 +334,8 @@ def main():
     # read configs
     filename = "config.ini"
     config = init_config(filename)
-    #fxtypes = eval(config['trobot Inputs']['fxtypes'])
-    #statustypes = eval(config['trobot Inputs']['statustypes'])
-    #alldatafilename = config['trobot Inputs']['alldatafilename']
-    #prefix = config['trobot Inputs']['prefix']
     ohlvcq = config['trobot Inputs']['ohlvcq']
     col = letter_to_number(ohlvcq)
-    #fx = fxtypes[1]
-    #status = statustypes[1]
-    #graphtimeperiod = graphtimeperiodlist[0]
     dbfilename = config['trobot Inputs']['dbfilename']
     limit = int(config['trobot Inputs']['assetlimit'])
     graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
