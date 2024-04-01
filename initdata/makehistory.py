@@ -129,9 +129,6 @@ def main():
             symbollist.insert(0, i)
 
 
-
-
-
     # get selected symbol's OHLCV & data
     dbconnection = dbconnect(dbfilename)
     dbcursor = dbconnection.cursor()
