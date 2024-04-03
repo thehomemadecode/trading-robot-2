@@ -1,4 +1,5 @@
-# trobot2 makeCandlestickDB (28 Mar)
+# trobot2 makeCandlestickDB (03 Apr)
+from binance.spot import Spot
 import sqlite3
 
 # read config.ini
@@ -45,6 +46,55 @@ def makeTables(dbconnection,symbollist,graphtimeperiodlist,prefix,limit):
     dbconnection.commit()
     dbconnection.close()
 
+def qvolume_filter(symbollist, qvolume):
+    symbollist2 = symbollist
+    graphtimeperiod = qvolume[0]
+    maxklines = qvolume[1]
+    targetaverageqvolume = qvolume[2]
+    # connect binance
+    client = Spot()
+    targetaverageqvolume1 = int(targetaverageqvolume[:-1])
+    targetaverageqvolume2 = targetaverageqvolume[-1].upper()
+    if (targetaverageqvolume2 == "M"):
+        targetaverageqvolume1 = targetaverageqvolume1*1000000
+    elif (targetaverageqvolume2 == "K"):
+        targetaverageqvolume1 = targetaverageqvolume1*1000
+
+    print(symbollist)
+    print(symbollist2)
+
+    for symbol in symbollist:
+        #print(symbol,graphtimeperiod,maxklines,targetaverageqvolume)
+        
+        bars = client.klines(symbol, graphtimeperiod, limit = maxklines)
+        average_volume = 0
+        for bar in bars:
+            #print(bar[7])
+            average_volume = average_volume + float(bar[7])
+        average_volume = average_volume/int(maxklines)
+        print(symbol,average_volume/1000000,targetaverageqvolume1)
+        
+        if (average_volume>targetaverageqvolume1):
+            print(symbol,"bigger")
+        else:
+            print(symbol,"smaller")
+            symbollist2.remove(symbol)
+        
+        '''
+        if (average_volume<targetaverageqvolume1):
+            print("removed:",symbol)
+            
+            symbollist2.remove(symbol)
+        else:
+            print("OK:",symbol)
+        '''
+    print(symbollist)
+    print(symbollist2)
+
+    exit()
+    return symbollist2
+
+
 def main():
     # read configs
     filename = "config.ini"
@@ -55,6 +105,7 @@ def main():
     # settings vars
     exclusions = eval(config['trobot Inputs']['exclusions'])
     inclusions = eval(config['trobot Inputs']['inclusions'])
+    qvolume = eval(config['trobot Inputs']['qvolume'])
     alldatafilename = config['trobot Inputs']['alldatafilename']
     fx = fxtypes[int(config['trobot Inputs']['fx'])]
     status = statustypes[int(config['trobot Inputs']['status'])]
@@ -122,9 +173,18 @@ def main():
 
                 elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
                     symbollist.append(i['symbol'])
-
-    symbollist = symbollist[:limit]
     
+    symbollist = symbollist[:limit*2]
+    print("before volume filter symbollist len:",len(symbollist))
+
+    symbollist2 = qvolume_filter(symbollist,qvolume)
+    print("-----------------------")
+    
+    print("after volume filter symbollist2 len:",len(symbollist2))
+    print(symbollist2)
+
+    exit()
+
     '''
     print("exclusions:")
     for e in exclusions:
@@ -166,20 +226,26 @@ def main():
         c = eifinder(i,symbollist)
         if not c:
             symbollist.insert(0, i)
-    '''
+
+    print("after ex-inc filter symbollist len:",len(symbollist))
+    symbollist = symbollist[:limit]    
+    print("after limit filter symbollist len:",len(symbollist))
+
+
     print("symbollist:")
     lc = 0
     for s in symbollist:
         print(lc,s)
         lc += 1
-    print("-----------------------")
-    '''
+
+
+
     
+    '''
     sqlite3ClearCreate(dbfilename)
     dbc = dbconnect(dbfilename)
     makeTables(dbc,symbollist,graphtimeperiodlist,prefix,limit)
-    
-
+    '''
 # most probably main
 if __name__ == '__main__':
     main()
