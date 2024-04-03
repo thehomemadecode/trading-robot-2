@@ -1,6 +1,6 @@
 from binance.spot import Spot
-import time
 import sqlite3
+#import time
 
 # read config.ini
 def init_config(filename):
@@ -18,12 +18,14 @@ def init_config(filename):
     file.close()
     return config
 
+'''
 # date conversion: human readable to machine
 def dateconvert(date):
     date = time.strptime(date, "%d/%m/%y-%H:%M")
     date = time.mktime(date)
     date = int(date*1000)
     return date
+'''
 
 def dbconnect(dbfilename):
     dbconnection = sqlite3.connect(dbfilename)
@@ -35,15 +37,15 @@ def main():
     config = init_config(filename)
     
     # settings const
-    fxtypes = eval(config['trobot Inputs']['fxtypes'])
-    statustypes = eval(config['trobot Inputs']['statustypes'])
+    #fxtypes = eval(config['trobot Inputs']['fxtypes'])
+    #statustypes = eval(config['trobot Inputs']['statustypes'])
     # settings vars
-    exclusions = eval(config['trobot Inputs']['exclusions'])
-    inclusions = eval(config['trobot Inputs']['inclusions'])
-    alldatafilename = config['trobot Inputs']['alldatafilename']
-    fx = fxtypes[int(config['trobot Inputs']['fx'])]
-    status = statustypes[int(config['trobot Inputs']['status'])]
-    isMarginTradingAllowed = config['trobot Inputs']['isMarginTradingAllowed']
+    #exclusions = eval(config['trobot Inputs']['exclusions'])
+    #inclusions = eval(config['trobot Inputs']['inclusions'])
+    #alldatafilename = config['trobot Inputs']['alldatafilename']
+    #fx = fxtypes[int(config['trobot Inputs']['fx'])]
+    #status = statustypes[int(config['trobot Inputs']['status'])]
+    #isMarginTradingAllowed = config['trobot Inputs']['isMarginTradingAllowed']
     maxklines = int(config['trobot Inputs']['maxklines'])
     graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
     prefix = config['trobot Inputs']['prefix']
@@ -53,6 +55,7 @@ def main():
     # connect binance
     client = Spot()
 
+    '''
     # get alldata content
     file = open(alldatafilename, "r")
     for content in file:
@@ -127,14 +130,25 @@ def main():
         c = eifinder(i,symbollist)
         if not c:
             symbollist.insert(0, i)
+    '''
 
+    filename = "symbollist"
+    file = open(filename, "r")
+
+    for content in file:
+        temp = content
+    file.close()
+    symbollist = eval(temp)
+
+    #print(symbollist)
+    
 
     # get selected symbol's OHLCV & data
     dbconnection = dbconnect(dbfilename)
     dbcursor = dbconnection.cursor()
     s = 0 # temporary counter for symbol limiter
     say = 0
-    symbolTable = []
+    #symbolTable = []
     for symbol in symbollist:
         #symbolTable.append(symbol)
         #symbolTable.append([])

@@ -1,4 +1,3 @@
-# trobot2 makeCandlestickDB (03 Apr)
 from binance.spot import Spot
 import sqlite3
 
@@ -47,53 +46,50 @@ def makeTables(dbconnection,symbollist,graphtimeperiodlist,prefix,limit):
     dbconnection.close()
 
 def qvolume_filter(symbollist, qvolume):
-    symbollist2 = symbollist
+    symbollist2 = []
     graphtimeperiod = qvolume[0]
-    maxklines = qvolume[1]
+    klineslimit = qvolume[1]
     targetaverageqvolume = qvolume[2]
     # connect binance
     client = Spot()
-    targetaverageqvolume1 = int(targetaverageqvolume[:-1])
+    targetaverageqvolume1 = float(targetaverageqvolume[:-1])
     targetaverageqvolume2 = targetaverageqvolume[-1].upper()
     if (targetaverageqvolume2 == "M"):
         targetaverageqvolume1 = targetaverageqvolume1*1000000
     elif (targetaverageqvolume2 == "K"):
         targetaverageqvolume1 = targetaverageqvolume1*1000
+    elif (targetaverageqvolume2 == "B"):
+        targetaverageqvolume1 = targetaverageqvolume1*1000000000
 
-    print(symbollist)
-    print(symbollist2)
+    # print(symbollist)
+    # print(symbollist2)
 
     for symbol in symbollist:
         #print(symbol,graphtimeperiod,maxklines,targetaverageqvolume)
         
-        bars = client.klines(symbol, graphtimeperiod, limit = maxklines)
+        bars = client.klines(symbol, graphtimeperiod, limit = klineslimit)
         average_volume = 0
         for bar in bars:
             #print(bar[7])
             average_volume = average_volume + float(bar[7])
-        average_volume = average_volume/int(maxklines)
-        print(symbol,average_volume/1000000,targetaverageqvolume1)
+        average_volume = average_volume/int(klineslimit)
+        #print(symbol,average_volume/targetaverageqvolume1)
         
         if (average_volume>targetaverageqvolume1):
-            print(symbol,"bigger")
-        else:
-            print(symbol,"smaller")
-            symbollist2.remove(symbol)
-        
-        '''
-        if (average_volume<targetaverageqvolume1):
-            print("removed:",symbol)
-            
-            symbollist2.remove(symbol)
-        else:
-            print("OK:",symbol)
-        '''
-    print(symbollist)
-    print(symbollist2)
+            symbollist2.append(symbol)
 
-    exit()
+    # print(symbollist)
+    # print(symbollist2)
+    
     return symbollist2
 
+def eifinder(eisymbol,eisymbollist):
+    c = 1
+    for i in range(len(eisymbollist)):
+        if eisymbol == eisymbollist[i]:
+            return c
+        c += 1
+    return False
 
 def main():
     # read configs
@@ -174,78 +170,37 @@ def main():
                 elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
                     symbollist.append(i['symbol'])
     
-    symbollist = symbollist[:limit*2]
-    print("before volume filter symbollist len:",len(symbollist))
-
-    symbollist2 = qvolume_filter(symbollist,qvolume)
-    print("-----------------------")
-    
-    print("after volume filter symbollist2 len:",len(symbollist2))
-    print(symbollist2)
-
-    exit()
-
-    '''
-    print("exclusions:")
-    for e in exclusions:
-        print(e)
-    print("-----------------------")
-    print("inclusions:")
-    for i in inclusions:
-        print(i)
-    print("-----------------------")
-    print("symbollist:")
-    lc = 0
-    for s in symbollist:
-        print(lc,s)
-        lc += 1
-    print("-----------------------")
-    '''
-    
-    def eifinder(eisymbol,eisymbollist):
-        c = 1
-        for i in range(len(eisymbollist)):
-            if eisymbol == eisymbollist[i]:
-                return c
-            c += 1
-        return False
-    
     for e in exclusions:
         c = eifinder(e,symbollist)
         if c:
             del symbollist[c-1]
-    '''
-    print("symbollist:")
-    lc = 0
-    for s in symbollist:
-        print(lc,s)
-        lc += 1
-    print("-----------------------")
-    '''
+
+    #print("initial symbollist len:",len(symbollist))
+    #print(symbollist)
+
+    symbollist = symbollist[:limit]
+    symbollist = qvolume_filter(symbollist,qvolume)
+
     for i in inclusions:
         c = eifinder(i,symbollist)
         if not c:
             symbollist.insert(0, i)
+    
+    symbollist = symbollist[:limit]
+    #print("initial symbollist len:",len(symbollist))
+    #print(symbollist)
 
-    print("after ex-inc filter symbollist len:",len(symbollist))
-    symbollist = symbollist[:limit]    
-    print("after limit filter symbollist len:",len(symbollist))
-
-
-    print("symbollist:")
-    lc = 0
-    for s in symbollist:
-        print(lc,s)
-        lc += 1
-
-
+    filename = "symbollist"
+    file = open(filename, "w")
+    file.write(str(symbollist))
+    file.close()
 
     
-    '''
     sqlite3ClearCreate(dbfilename)
     dbc = dbconnect(dbfilename)
     makeTables(dbc,symbollist,graphtimeperiodlist,prefix,limit)
-    '''
+    
+
 # most probably main
 if __name__ == '__main__':
     main()

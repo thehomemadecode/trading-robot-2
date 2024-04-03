@@ -7,3 +7,4 @@ trobot2.cpython-311-x86_64-linux-gnu.so
 __pycache__/*
 build/*
 experimental/build
+initdata/symbollist
