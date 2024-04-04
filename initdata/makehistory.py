@@ -140,7 +140,7 @@ def main():
     file.close()
     symbollist = eval(temp)
 
-    #print(symbollist)
+    #print(len(symbollist))
     
 
     # get selected symbol's OHLCV & data

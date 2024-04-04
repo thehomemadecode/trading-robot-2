@@ -280,7 +280,13 @@ PyMODINIT_FUNC PyInit_trobot2(void) {
 }
 /* end of code */
 # -----------------------------------------------------------------------------------------------
-
+    allfx = ["TUSD", "PAX", "USDC", "XRP", "USDS", "TRX", "BUSD", "NGN", "RUB", "TRY", "EUR", "ZAR", "BKRW", "IDRT", "GBP", "UAH", "BIDR", "AUD", "DAI", "BRL", "BVND", "VAI", "USDP", "DOGE", "UST", "DOT", "PLN", "RON", "ARS", "FDUSD", "AEUR", "JPY"]
+    
+    for a in allfx:
+        a2 = a+"USDT"
+        for s in symbollist:
+            if (a2 == s):
+                print('"'+a2+'",',end=" ")
 # -----------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------

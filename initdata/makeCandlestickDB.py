@@ -47,6 +47,8 @@ def makeTables(dbconnection,symbollist,graphtimeperiodlist,prefix,limit):
 
 def qvolume_filter(symbollist, qvolume):
     symbollist2 = []
+    if (qvolume == []):
+        return symbollist
     graphtimeperiod = qvolume[0]
     klineslimit = qvolume[1]
     targetaverageqvolume = qvolume[2]
@@ -61,27 +63,30 @@ def qvolume_filter(symbollist, qvolume):
     elif (targetaverageqvolume2 == "B"):
         targetaverageqvolume1 = targetaverageqvolume1*1000000000
 
-    # print(symbollist)
-    # print(symbollist2)
-
+    #print(symbollist)
+    #print(symbollist2)
+    s = 1
     for symbol in symbollist:
         #print(symbol,graphtimeperiod,maxklines,targetaverageqvolume)
-        
         bars = client.klines(symbol, graphtimeperiod, limit = klineslimit)
         average_volume = 0
         for bar in bars:
-            #print(bar[7])
+            #print(float(bar[7])/targetaverageqvolume1)
             average_volume = average_volume + float(bar[7])
         average_volume = average_volume/int(klineslimit)
-        #print(symbol,average_volume/targetaverageqvolume1)
-        
+        print(s,symbol,average_volume)
+        s += 1
         if (average_volume>targetaverageqvolume1):
-            symbollist2.append(symbol)
-
-    # print(symbollist)
-    # print(symbollist2)
+            symbollist2.append([average_volume,symbol])
     
-    return symbollist2
+    symbollist2.sort(reverse = True)
+    #print(symbollist)
+    #print(symbollist2)
+    symbollist3 = []
+    for s in symbollist2:
+        symbollist3.append(s[1])
+    #print(symbollist3)
+    return symbollist3
 
 def eifinder(eisymbol,eisymbollist):
     c = 1
@@ -118,7 +123,7 @@ def main():
     file.close()
     alldata = eval(temp)
     symbollist = []
-    
+
     # isMarginTradingAllowed & fx & status: populate symbollist
     if isMarginTradingAllowed == "BOTH":
         for i in alldata['symbols']:
@@ -169,37 +174,35 @@ def main():
 
                 elif fx == i['symbol'][-(len(fx)):] and status == i['status']:
                     symbollist.append(i['symbol'])
-    
+
+    # exclusions are removed
     for e in exclusions:
         c = eifinder(e,symbollist)
         if c:
             del symbollist[c-1]
 
-    #print("initial symbollist len:",len(symbollist))
-    #print(symbollist)
-
-    symbollist = symbollist[:limit]
+    # volume filter applied
     symbollist = qvolume_filter(symbollist,qvolume)
 
+    # inclusions are added
     for i in inclusions:
         c = eifinder(i,symbollist)
         if not c:
             symbollist.insert(0, i)
-    
-    symbollist = symbollist[:limit]
-    #print("initial symbollist len:",len(symbollist))
-    #print(symbollist)
 
+    # limiter
+    symbollist = symbollist[:limit]
+
+    # symbollist is saved into a file for makehistory.py
     filename = "symbollist"
     file = open(filename, "w")
     file.write(str(symbollist))
     file.close()
 
-    
+    # make db base
     sqlite3ClearCreate(dbfilename)
     dbc = dbconnect(dbfilename)
     makeTables(dbc,symbollist,graphtimeperiodlist,prefix,limit)
-    
 
 # most probably main
 if __name__ == '__main__':
