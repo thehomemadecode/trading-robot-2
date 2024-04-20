@@ -361,7 +361,8 @@ def main():
 
     just_fix_windows_console()
 
-    tasks = limit * len(graphtimeperiodlist)
+    #tasks = limit * len(graphtimeperiodlist)
+    tasks = len(selecteddata)
     tdivide = floor(tasks / 4)
     tremind = tasks % 4
     
