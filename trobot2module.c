@@ -30,11 +30,33 @@ double ema(double **a, int col, int len) {
 	}
 	return ema;
 }
+double rsi(double **a, int col, int len) {
+	double rsi = 0;
+	double gain = 0;
+	double loss = 0;
+	int g = 0, l = 0;
+	for (int e=0;e<len;e++) {
+		//printf("%d %d %f\n",e,len,a[e][3]);
+		if (a[e][col] > a[e+1][col]) {
+			gain += a[e][col] - a[e+1][col];
+			g++;
+		}
+		else {
+			loss += a[e+1][col] - a[e][col];
+			l++;
+		}
+	}	
+	gain /= 14;
+	loss /= 14;
+	printf("%d %d \n",g,l);
+	rsi = 100 - (100/(1+(gain/loss)));
+	return rsi;
+}
 /* TA functions section end */
 
 /* function map section begin */
-const char *functionsTAlist[2] = {"sma", "ema"};
-double (*functionsTA[])(double**, int, int) = {sma, ema};
+const char *functionsTAlist[3] = {"sma", "ema", "rsi"};
+double (*functionsTA[])(double**, int, int) = {sma, ema, rsi};
 /* function map section end */
 
 /* Reception function for incoming data: */
@@ -223,22 +245,22 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 
         result = result && result2;
         //if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
-
     }
-	/*
+
 	if (matched == 3) {
-		return Py_BuildValue("dd", res1, res2);
+		return Py_BuildValue("bdd", result, res1, res2);
 	} else if (matched == 5) {
-		return Py_BuildValue("ddd", res1, res2, res3);
+		return Py_BuildValue("bddd", result, res1, res2, res3);
 	} else {
 		return Py_BuildValue("i", -1);
 	}
-	*/
+	/*
 	if (matched == 3 || matched == 5) {
 		return Py_BuildValue("b", result);
 	} else {
 		return Py_BuildValue("i", -1);
 	}
+	*/
 }
 /* Reception function end */
 

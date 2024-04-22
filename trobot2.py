@@ -245,7 +245,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    if (sayac>25):break # stop 
+                    if (sayac>1):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                         dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -280,12 +280,12 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     allrules = init_rules(config['rules'])
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
-                    if (res):
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE")
-                    '''
+                    if (res[0]):
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE\t{round(res[1],2)}\t{res[2]}")
+
                     else:
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE")
-                    '''
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE\t{round(res[1],2)}\t{res[2]}")
+
                     if errstate:
                         print(clor+styl+f"error occurred on await websocket.recv()")
                         errstate = 0
@@ -295,7 +295,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     print("")
                     '''
                     # end ------ > trobot C module < ----------------------------------------------------
-            print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
+            #print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
     except websockets.exceptions.ConnectionClosed:
         #import sys
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
