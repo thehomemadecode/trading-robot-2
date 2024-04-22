@@ -65,9 +65,9 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 	PyObject* analysisrulePy = PyUnicode_AsUTF8String(analysisrule);
 	char* analysisruleC = PyBytes_AsString(analysisrulePy);
     char word1[20], word2[20], word3[20];
-    char separator1, separator2;
+    char operator1, operator2;
 
-	int matched = sscanf(analysisruleC, "%19[^<>=] %c %19[^<>=] %c %19[^<>=]", word1, &separator1, word2, &separator2, word3);
+	int matched = sscanf(analysisruleC, "%19[^<>=] %c %19[^<>=] %c %19[^<>=]", word1, &operator1, word2, &operator2, word3);
 	//printf("matched: %d\n",matched);
 
     char word1f[20], word2f[20], word3f[20];
@@ -125,11 +125,11 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    if (numberv) {sscanf(word2, "%lf", &res2);//printf("numberv res2: %f\n",res2);
 			}
         }
-        //printf("separator1: %c\n", separator1);
+        //printf("operator1: %c\n", operator1);
 
-        if      (separator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
-        else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
-        else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
+        if      (operator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
+        else if (operator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
+        else if (operator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
         else {result = FALSE;}
 		//if (result==TRUE) {printf("TRUE\n");} else {printf("FALSE\n");}
 
@@ -208,17 +208,17 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		    if (numberv) {sscanf(word3, "%lf", &res3);//printf("numberv res3: %f\n",res3);
 			}
         }
-        //printf("separator1: %c\n", separator1);
-        //printf("separator2: %c\n", separator2);
+        //printf("operator1: %c\n", operator1);
+        //printf("operator2: %c\n", operator2);
 
-        if      (separator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
-        else if (separator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
-        else if (separator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
+        if      (operator1 == GT) {if(res1 > res2){result = TRUE;} else {result = FALSE;}}
+        else if (operator1 == LT) {if(res1 < res2){result = TRUE;} else {result = FALSE;}}
+        else if (operator1 == ET) {if(res1 == res2){result = TRUE;} else {result = FALSE;}}
         else {result = FALSE;}
 
-        if      (separator2 == GT) {if(res2 > res3){result2 = TRUE;} else {result2 = FALSE;}}
-        else if (separator2 == LT) {if(res2 < res3){result2 = TRUE;} else {result2 = FALSE;}}
-        else if (separator2 == ET) {if(res2 == res3){result2 = TRUE;} else {result2 = FALSE;}}
+        if      (operator2 == GT) {if(res2 > res3){result2 = TRUE;} else {result2 = FALSE;}}
+        else if (operator2 == LT) {if(res2 < res3){result2 = TRUE;} else {result2 = FALSE;}}
+        else if (operator2 == ET) {if(res2 == res3){result2 = TRUE;} else {result2 = FALSE;}}
         else {result2 = FALSE;}
 
         result = result && result2;

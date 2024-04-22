@@ -1,4 +1,4 @@
-# trobot2 main body (28 Mar)
+# trobot2 main body (21 Apr)
 import sqlite3
 import trobot2 as tr
 from binance.spot import Spot
@@ -349,25 +349,12 @@ def main():
     selecteddata = db_read(dbcon)
     dbcon.close()
 
-    '''
-    col = letter_to_number(ohlvcq)
-    for rowdata in selecteddata:
-        for datagroup in rowdata[3:]:
-            for data in datagroup:
-                print(data[col])
-    #print(bar,end=" ")
-    #print("")
-    '''
-
     just_fix_windows_console()
 
-    #tasks = limit * len(graphtimeperiodlist)
     tasks = len(selecteddata)
     tdivide = floor(tasks / 4)
     tremind = tasks % 4
-    
-    #print(tasks,tdivide,tremind)
-    
+
     baseurl = "https://api.binance.com"
     tasknum = tdivide
     if (tremind>0):tasknum += 1
@@ -391,12 +378,7 @@ def main():
     if (tremind>0):tasknum4 += 1
     tremind -= 1
     p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum3,tasknum4))
-    
-    #print(0,tasknum)
-    #print(tasknum,tasknum2)
-    #print(tasknum2,tasknum3)
-    #print(tasknum3,tasknum4)
-        
+
     p1.start()
     p2.start()
     p3.start()
