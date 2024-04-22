@@ -55,7 +55,7 @@ timetable = {
     "3m"  :3,
     "5m"  :5,
     "15m" :15,
-    "30m" :30,    
+    "30m" :30,
     "1h"  :60,
     "2h"  :120,
     "4h"  :240,
@@ -245,7 +245,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    if (sayac>1):break # stop 
+                    if (sayac>10):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                         dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -295,7 +295,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     print("")
                     '''
                     # end ------ > trobot C module < ----------------------------------------------------
-            #print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
+            print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
     except websockets.exceptions.ConnectionClosed:
         #import sys
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
@@ -340,7 +340,7 @@ def main():
     limit = int(config['trobot Inputs']['assetlimit'])
     graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
     maxklines = int(config['trobot Inputs']['maxklines'])
-   
+
     dbcon = dbconnect(dbfilename)
     client = Spot()
     temp = db_check(dbcon,client)
@@ -366,13 +366,13 @@ def main():
     if (tremind>0):tasknum2 += 1
     tremind -= 1
     p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum,tasknum2))
-    
+
     baseurl = "https://api2.binance.com"
     tasknum3 = tasknum2 + tdivide
     if (tremind>0):tasknum3 += 1
     tremind -= 1
     p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum2,tasknum3))
-    
+
     baseurl = "https://api3.binance.com"
     tasknum4 = tasknum3 + tdivide
     if (tremind>0):tasknum4 += 1
@@ -391,7 +391,7 @@ def main():
     p2.terminate()
     p3.terminate()
     p4.terminate()
-    
+
 # most probably main
 if __name__ == '__main__':
     main()
