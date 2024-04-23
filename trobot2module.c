@@ -21,12 +21,8 @@ double sma(double **a, int col, int len) {
 double ema(double **a, int col, int len) {
 	double multiplier = 2.0 / (len + 1);
 	double ema = a[len][col];
-	//printf("ema: %f\n",ema);
 	for (int e=len-1;e>=0;--e) {
-	//for (int e=0;e<len;e++) {
-		//ema = ema + ((a[e][3]-ema)*multiplier);
 		ema = (a[e][col] * multiplier) + (ema * (1-multiplier));
-		//printf("%d %d %f\n",e,len,a[e][3]);
 	}
 	return ema;
 }
@@ -36,7 +32,6 @@ double rsi(double **a, int col, int len) {
 	double loss = 0;
 	int g = 0, l = 0;
 	for (int e=0;e<len;e++) {
-		//printf("%d %d %f\n",e,len,a[e][3]);
 		if (a[e][col] > a[e+1][col]) {
 			gain += a[e][col] - a[e+1][col];
 			g++;
@@ -46,8 +41,8 @@ double rsi(double **a, int col, int len) {
 			l++;
 		}
 	}	
-	gain /= 14;
-	loss /= 14;
+	gain /= len;
+	loss /= len;
 	//printf("%d %d \n",g,l);
 	rsi = 100 - (100/(1+(gain/loss)));
 	return rsi;
