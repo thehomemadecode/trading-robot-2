@@ -11,8 +11,8 @@ def init_config(filename):
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
-            elif '=' in line and current_section and not line.startswith('#'):
-                key, value = line.split('=')
+            elif ':' in line and current_section and not line.startswith('#'):
+                key, value = line.split(':')
                 config[current_section][key.strip()] = value.strip()
     file.close()
     return config
@@ -30,7 +30,7 @@ def init_rules(config_rules):
 filename = "config.ini"
 config = init_config(filename)
 allrules = init_rules(config['rules'])
-print(allrules)
+#print(allrules)
 
 
 alpha = 1
@@ -39,7 +39,7 @@ wbvnum = random.weibullvariate(alpha, beta)
 #print(round(wbvnum,4))
 
 datasend = []
-for d in range(0,3):
+for d in range(0,30):
     row = []
     for i in range(0,6):
         wbvnum = random.weibullvariate(alpha, beta)
@@ -59,19 +59,25 @@ for i in range(0,6):
     wbvnum = random.weibullvariate(alpha, beta)
     row.append(round(wbvnum,4))
 datasend = [row] + datasend
-print(datasend)
+
+cd = 0
+for d in datasend:
+    print(d)
+    cd += 1 
 
 cols = [0,1,2,3,4,5]
 
-analysisrule = allrules[1][1]
+analysisrule = allrules[0][1]
 
 
 
-#print(datasend)
-#print(cols)
-#print(analysisrules)
 
-res = tr.receptionP(datasend,cols,analysisrule)
+
+
+
+res = tr.receptionP(datasend,cols[3],analysisrule)
+print(res)
+'''
 for r in res:
     print("tr0:",round(r,4))
-
+'''

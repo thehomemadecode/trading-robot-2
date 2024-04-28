@@ -47,11 +47,33 @@ double rsi(double **a, int col, int len) {
 	rsi = 100 - (100/(1+(gain/loss)));
 	return rsi;
 }
+double macd(double **a, int col, int len) {
+	double macd = 0;
+	double macd12 = 0;
+	double macd26 = 0;
+	macd12 = ema(a,col,12);
+	macd26 = ema(a,col,26);
+	macd = macd12-macd26;
+
+	double** yeni_dizi = (double**)malloc((len - 1) * sizeof(double*));
+    for (int i = 0; i < len - 1; i++) {
+        yeni_dizi[i] = (double*)malloc(6 * sizeof(double));
+    }
+
+    for (int i = 1; i < len; i++) {
+        for (int j = 0; j < 6; j++) {
+            yeni_dizi[i - 1][j] = a[i][j];
+        }
+    }
+
+	return macd;
+}
 /* TA functions section end */
 
 /* function map section begin */
-const char *functionsTAlist[3] = {"sma", "ema", "rsi"};
-double (*functionsTA[])(double**, int, int) = {sma, ema, rsi};
+const char *functionsTAlist[4] = {"sma", "ema", "rsi", "macd"};
+double (*functionsTA[])(double**, int, int) = {sma, ema, rsi, macd};
+//double (*functionsTA2[])(double**, int, int, int) = {macd};
 /* function map section end */
 
 /* Reception function for incoming data: */
@@ -73,7 +95,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		data_c[i] = malloc(num_cols * sizeof(double));
 		for (Py_ssize_t j = 0; j < num_cols; ++j) {
 			PyObject *item = PyList_GetItem(row, j);
-			item = PyFloat_FromString(item); // comment it while working with work.py !!!!!!!!!
+			//item = PyFloat_FromString(item); // comment it while working with work.py !!!!!!!!!
 			data_c[i][j] = PyFloat_AsDouble(item);
 		}
 	}
