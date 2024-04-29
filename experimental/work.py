@@ -32,6 +32,19 @@ config = init_config(filename)
 allrules = init_rules(config['rules'])
 #print(allrules)
 
+# convert OHLC letters to numbers, default:C
+def letter_to_number(arg):
+    switcher = {
+        "O": 0, # open
+        "H": 1, # high
+        "L": 2, # low
+        "C": 3, # close
+        "V": 4, # volume
+        "Q": 5  # quote assest volume
+    }
+    return switcher.get(arg, 3)
+ohlvcq = config['trobot Inputs']['ohlvcq']
+col = letter_to_number(ohlvcq)
 
 alpha = 1
 beta = 1.5
@@ -39,7 +52,7 @@ wbvnum = random.weibullvariate(alpha, beta)
 #print(round(wbvnum,4))
 
 datasend = []
-for d in range(0,30):
+for d in range(0,40):
     row = []
     for i in range(0,6):
         wbvnum = random.weibullvariate(alpha, beta)
@@ -62,22 +75,14 @@ datasend = [row] + datasend
 
 cd = 0
 for d in datasend:
-    print(d)
+    print(cd,d)
     cd += 1 
-
-cols = [0,1,2,3,4,5]
 
 analysisrule = allrules[0][1]
 
-
-
-
-
-
-
-res = tr.receptionP(datasend,cols[3],analysisrule)
+res = tr.receptionP(datasend,col,analysisrule)
 print(res)
-'''
+
 for r in res:
-    print("tr0:",round(r,4))
-'''
+    print("tr:",round(r,4))
+

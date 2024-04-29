@@ -281,10 +281,10 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
                     if (res[0]):
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE\t{round(res[1],2)}\t{res[2]}")
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE\t{round(res[1],2)}\t{round(res[2],2)}")
 
                     else:
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE\t{round(res[1],2)}\t{res[2]}")
+                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE\t{round(res[1],2)}\t{round(res[2],2)}")
 
                     if errstate:
                         print(clor+styl+f"error occurred on await websocket.recv()")

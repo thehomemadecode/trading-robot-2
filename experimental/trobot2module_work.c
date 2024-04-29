@@ -47,40 +47,39 @@ double rsi(double **a, int col, int len) {
 	rsi = 100 - (100/(1+(gain/loss)));
 	return rsi;
 }
-double macd(double **a, int col, int len) {
+double *macd(double **a, int col, int macd12len, int macd26len, int smoothing_signal_length) {
 	double macd = 0;
 	double macd12 = 0;
 	double macd26 = 0;
+	double macdsignal = 0;
 
-	int smoothing_signal_length = 9;
+	macd12 = ema(a,col,macd12len);
+	macd26 = ema(a,col,macd26len);
+	macd = macd12-macd26;
+
 	for (int i=0; i<smoothing_signal_length; i++) {
-		macd12 = ema(a,col,12);
-		macd26 = ema(a,col,26);
-		macd = macd12-macd26;
-	
-		for (int j=0;j<)
-		a[i] = a[i + 1];
+		macd12 = ema(a,col,macd12len);
+		macd26 = ema(a,col,macd26len);
+		macdsignal += macd12-macd26;
+		//printf("%i macd: %f \n",i,macdsignal);
+
+		for (int i=0;i<macd26len+smoothing_signal_length;i++) {
+			for (int j=0;j<6;j++) {
+				a[i][j] = a[i+1][j];
+			}
+		}
 	}
-
-
-/* 	double** a2 = (double**)malloc((len - 1) * sizeof(double*));
-    for (int i = 0; i < len - 1; i++) {
-        a2[i] = (double*)malloc(6 * sizeof(double));
-    }
-    for (int i = 1; i < len; i++) {
-        for (int j = 0; j < 6; j++) {
-            a2[i - 1][j] = a[i][j];
-        }
-    } */
-
-	return macd;
+	double macdseries[4] = {macd,macd12,macd26,macdsignal/smoothing_signal_length};
+	printf("%f %f %f %f \n",macd,macd12,macd26,macdsignal/smoothing_signal_length);
+	return macdseries;
+	//return macd;
 }
 /* TA functions section end */
 
 /* function map section begin */
 const char *functionsTAlist[4] = {"sma", "ema", "rsi", "macd"};
-double (*functionsTA[])(double**, int, int) = {sma, ema, rsi, macd};
-//double (*functionsTA2[])(double**, int, int, int) = {macd};
+double (*functionsTA[])(double**, int, int) = {sma, ema, rsi};
+double *(*functionsTA2[])(double**, int, int, int, int) = {macd};
 /* function map section end */
 
 /* Reception function for incoming data: */
@@ -117,16 +116,30 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 	//printf("matched: %d\n",matched);
 
 	char word1f[20], word2f[20], word3f[20];
-	int param1, param2, param3;
+	int param1, param12, param13;
+	int param2, param22, param23;
+	int param3;
 	double res1, res2, res3;
 	const char *ohlclist[6] = {"open", "high", "low", "close", "volume", "qvolume"};
 	unsigned char result,result2;
 	if (matched == 3) {
-		int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
-		int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
-		//printf("%d %d %d\n",m1,m2);
+		int m1 = sscanf(word1, "%[^(](%d,%d,%d)", word1f, &param1, &param12, &param13);
+		int m2 = sscanf(word2, "%[^(](%d,%d,%d)", word2f, &param2, &param22, &param23);
+		//printf("%d %d\n",m1,m2);
+		if (m1==4) {
+			double* arr;
+			arr = macd(data_c, col, param1, param12, param13);
+			/*
+			printf("arr0: %f\n",arr[0]);
+			printf("arr1: %f\n",arr[1]);
+			printf("arr2: %f\n",arr[2]);
+			printf("arr3: %f\n",arr[3]);
+			*/
+			res1 = 0;
+		}
+
 		if (m1==2) {
-			//printf("word1: %s %d\n", word1f,param1);
+			//printf("word1: %s %d\n", word1f, param1);
 			for (int i = 0; i < 4; ++i) {
 				if (strcmp(functionsTAlist[i], word1f) == 0) {
 					res1 = functionsTA[i](data_c, col, param1);
