@@ -95,7 +95,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		data_c[i] = malloc(num_cols * sizeof(double));
 		for (Py_ssize_t j = 0; j < num_cols; ++j) {
 			PyObject *item = PyList_GetItem(row, j);
-			//item = PyFloat_FromString(item); // comment it while working with work.py !!!!!!!!!
+			item = PyFloat_FromString(item); // comment it while working with work.py !!!!!!!!!
 			data_c[i][j] = PyFloat_AsDouble(item);
 		}
 	}
