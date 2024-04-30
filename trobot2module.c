@@ -157,7 +157,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 	char word1f[20], word2f[20], word3f[20];
 	int param1, param12, param13;
 	int param2, param22, param23;
-	int param3;
+	int param3, param32, param33;
 	double res1, res2, res3;
 	const char *ohlclist[6] = {"open", "high", "low", "close", "volume", "qvolume"};
 	unsigned char result,result2;
@@ -243,11 +243,22 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 
 	} 
 	else if (matched == 5) {
-		int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
-		int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
-		int m3 = sscanf(word3, "%[^(](%d)", word3f, &param3);
+		int m1 = sscanf(word1, "%[^(](%d,%d,%d)", word1f, &param1, &param12, &param13);
+		int m2 = sscanf(word2, "%[^(](%d,%d,%d)", word2f, &param2, &param22, &param23);
+		int m3 = sscanf(word3, "%[^(](%d,%d,%d)", word3f, &param3, &param32, &param33);
 		//printf("%d %d %d\n",m1,m2,m3);
-		if (m1==2) {
+
+		// matched:5 m1:4-2-?
+		if (m1==4) {
+			struct macdseriesstruct macdres = macd(data_c, col, param1, param12, param13);
+			/*
+			printf("macd: %f ",macdres.macd);
+			printf("macd12: %f ",macdres.macd12);
+			printf("macd26: %f ",macdres.macd26);
+			printf("macdsignal: %f\n",macdres.macdsignal);
+			*/
+			res1 = macdres.macd;
+		} else if (m1==2) {
 			//printf("word1: %s %d\n", word1f,param1);
 			for (int i = 0; i < 4; ++i) {
 				if (strcmp(functionsTAlist[i], word1f) == 0) {
@@ -270,7 +281,18 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			if (numberv) {sscanf(word1, "%lf", &res1);//printf("numberv res1: %f\n",res1);
 			}
 		}
-		if (m2==2) {
+
+		// matched:5 m2:4-2-?
+		if (m2==4) {
+			struct macdseriesstruct macdres = macd(data_c, col, param2, param22, param23);
+			/*
+			printf("macd: %f ",macdres.macd);
+			printf("macd12: %f ",macdres.macd12);
+			printf("macd26: %f ",macdres.macd26);
+			printf("macdsignal: %f\n",macdres.macdsignal);
+			*/
+			res2 = macdres.macd;
+		} else if (m2==2) {
 			//printf("word2: %s %d\n", word2f,param2);
 			for (int i = 0; i < 4; ++i) {
 				if (strcmp(functionsTAlist[i], word2f) == 0) {
@@ -293,7 +315,18 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			if (numberv) {sscanf(word2, "%lf", &res2);//printf("numberv res2: %f\n",res2);
 			}
 		}
-		if (m3==2) {
+
+		// matched:5 m3:4-2-?
+		if (m3==4) {
+			struct macdseriesstruct macdres = macd(data_c, col, param3, param32, param33);
+			/*
+			printf("macd: %f ",macdres.macd);
+			printf("macd12: %f ",macdres.macd12);
+			printf("macd26: %f ",macdres.macd26);
+			printf("macdsignal: %f\n",macdres.macdsignal);
+			*/
+			res3 = macdres.macd;
+		} else if (m3==2) {
 			//printf("word3: %s %d\n", word3f,param3);
 			for (int i = 0; i < 4; ++i) {
 				if (strcmp(functionsTAlist[i], word3f) == 0) {
