@@ -64,7 +64,7 @@ struct macdseriesstruct {
     double macd26;
     double macdsignal;
 };
-struct macdseriesstruct macd(double **aa, int col, int macd12len, int macd26len, int smoothing_signal_length) {
+struct macdseriesstruct macd_s(double **aa, int col, int macd12len, int macd26len, int smoothing_signal_length) {
 	double macd = 0;
 	double macd12 = 0;
 	double macd26 = 0;
@@ -89,6 +89,25 @@ struct macdseriesstruct macd(double **aa, int col, int macd12len, int macd26len,
 	macdseries.macd12 = macd12;
 	macdseries.macd26 = macd26;
 	macdseries.macdsignal = macdsignal;
+	//macdseries[4] = {macd,macd12,macd26,macdsignal/smoothing_signal_length};
+	//printf("macd:%f m12:%f m26:%f sig:%f \n",macd,macd12,macd26,macdsignal/smoothing_signal_length);
+	return macdseries;
+	//return macd;
+}
+struct macdseriesstruct macd(double **aa, int col, int macd12len, int macd26len, int temp) {
+	double macd = 0;
+	double macd12 = 0;
+	double macd26 = 0;
+
+	macd12 = ema(aa,col,macd12len);
+	macd26 = ema(aa,col,macd26len);
+	macd = macd12-macd26;
+
+	struct macdseriesstruct macdseries;
+	macdseries.macd = macd;
+	macdseries.macd12 = macd12;
+	macdseries.macd26 = macd26;
+	macdseries.macdsignal = temp;
 	//macdseries[4] = {macd,macd12,macd26,macdsignal/smoothing_signal_length};
 	//printf("macd:%f m12:%f m26:%f sig:%f \n",macd,macd12,macd26,macdsignal/smoothing_signal_length);
 	return macdseries;
