@@ -21,12 +21,14 @@ double sma(double **a, int col, int len) {
 //EMA = alpha * source + (1 - alpha) * EMA[1], ;; alpha = 2 / (length + 1).
 double ema(double **a, int col, int len) {
 	double sma = 0;
-	for (int i=len;i<len*2;i++) {
+	for (int i=len*2;i<len*3;i++) {
 		sma += a[i][col];
 	}
-	double ema = sma / len;
 	double alpha = 2.0 / (len + 1);
-
+	double ema = sma / len;
+	for (int e=(len*2)-1;e>=len;e--) {
+		ema = (a[e][col] * alpha) + (ema * (1 - alpha));
+	}
 	for (int e=len-1;e>=0;e--) {
 		ema = (a[e][col] * alpha) + (ema * (1 - alpha));
 	}

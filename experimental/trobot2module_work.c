@@ -18,11 +18,19 @@ double sma(double **a, int col, int len) {
 	sma = sma/len;
 	return sma;
 }
+//EMA = alpha * source + (1 - alpha) * EMA[1], ;; alpha = 2 / (length + 1).
 double ema(double **a, int col, int len) {
-	double multiplier = 2.0 / (len + 1);
-	double ema = a[len][col];
-	for (int e=len-1;e>=0;--e) {
-		ema = (a[e][col] * multiplier) + (ema * (1-multiplier));
+	double sma = 0;
+	for (int i=len*2;i<len*3;i++) {
+		sma += a[i][col];
+	}
+	double alpha = 2.0 / (len + 1);
+	double ema = sma / len;
+	for (int e=(len*2)-1;e>=len;e--) {
+		ema = (a[e][col] * alpha) + (ema * (1 - alpha));
+	}
+	for (int e=len-1;e>=0;e--) {
+		ema = (a[e][col] * alpha) + (ema * (1 - alpha));
 	}
 	return ema;
 }
@@ -53,16 +61,13 @@ double *macd(double **a, int col, int macd12len, int macd26len, int smoothing_si
 	double macd26 = 0;
 	double macdsignal = 0;
 
+	//printf("col:%d macd12/26len:%d %d\n",col,macd12len,macd26len);
 	macd12 = ema(a,col,macd12len);
 	macd26 = ema(a,col,macd26len);
 	macd = macd12-macd26;
 
 	for (int i=0; i<smoothing_signal_length; i++) {
-		macd12 = ema(a,col,macd12len);
-		macd26 = ema(a,col,macd26len);
-		macdsignal += macd12-macd26;
-		//printf("%i macd: %f \n",i,macdsignal);
-
+		macdsignal += ema(a,col,macd12len)-ema(a,col,macd26len);
 		for (int i=0;i<macd26len+smoothing_signal_length;i++) {
 			for (int j=0;j<6;j++) {
 				a[i][j] = a[i+1][j];
@@ -70,7 +75,7 @@ double *macd(double **a, int col, int macd12len, int macd26len, int smoothing_si
 		}
 	}
 	double macdseries[4] = {macd,macd12,macd26,macdsignal/smoothing_signal_length};
-	printf("%f %f %f %f \n",macd,macd12,macd26,macdsignal/smoothing_signal_length);
+	printf("macd:%f m12:%f m26:%f sig:%f \n",macd,macd12,macd26,macdsignal/smoothing_signal_length);
 	return macdseries;
 	//return macd;
 }
@@ -127,8 +132,9 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		int m2 = sscanf(word2, "%[^(](%d,%d,%d)", word2f, &param2, &param22, &param23);
 		//printf("%d %d\n",m1,m2);
 		if (m1==4) {
-			double* arr;
-			arr = macd(data_c, col, param1, param12, param13);
+			//double* arr;
+			//arr = macd(data_c, col, param1, param12, param13);
+			macd(data_c, col, param1, param12, param13);
 			/*
 			printf("arr0: %f\n",arr[0]);
 			printf("arr1: %f\n",arr[1]);
@@ -137,9 +143,8 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			*/
 			res1 = 0;
 		}
-
 		if (m1==2) {
-			//printf("word1: %s %d\n", word1f, param1);
+			//printf("word1: %s %d\n", word1f,param1);
 			for (int i = 0; i < 4; ++i) {
 				if (strcmp(functionsTAlist[i], word1f) == 0) {
 					res1 = functionsTA[i](data_c, col, param1);
