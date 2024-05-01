@@ -7,8 +7,7 @@
 #define GT '>'
 #define LT '<'
 #define ET '='
-	int num_cols_int = 0;
-	int num_rows_int = 0;
+
 /* TA functions section begin */
 double testindicator(double **a, int col, int len) {
 	double ti = 0;
@@ -65,6 +64,8 @@ struct macdseriesstruct {
     double macd26;
     double macdsignal;
 };
+int num_cols_int = 0;
+int num_rows_int = 0;
 struct macdseriesstruct macd(double **a, int col, int macd12len, int macd26len, int smoothing_signal_length) {
 	double macd = 0;
 	double macd12 = 0;
@@ -84,7 +85,6 @@ struct macdseriesstruct macd(double **a, int col, int macd12len, int macd26len, 
 			a2[i][j] = a[i][j];
 		}
 	}
-
 	for (int i=0; i<smoothing_signal_length; i++) {
 		macdsignal += ema(a2,col,macd12len)-ema(a2,col,macd26len);
 		for (int i=0;i<macd26len+smoothing_signal_length;i++) {

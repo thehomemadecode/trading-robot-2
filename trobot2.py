@@ -273,29 +273,30 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                             sql = sql1+sql2+f"VALUES({sql3})"
                             dbcur.execute(sql)
                         dbcon.commit()
-
                     # start ---- > trobot C module < ----------------------------------------------------
                     filename = "config.ini"
                     config = init_config(filename)
                     allrules = init_rules(config['rules'])
                     analysisrule = allrules[0][1]
                     res = tr.receptionP(data[4],col,analysisrule)
-                    if (res[0]):
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tTRUE\t{round(res[1],4)}\t{round(res[2],4)}\t{round(res[3],4)}")
-
+                    restext = f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}"
+                    if (len(res)==3):
+                        restext2 = f"{round(res[1],4)}\t{round(res[2],4)}"
+                    elif (len(res)==4):
+                        restext2 = f"{round(res[1],4)}\t{round(res[2],4)}\t{round(res[3],4)}"
                     else:
-                        print(clor+styl+f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}\tFALSE\t{round(res[1],4)}\t{round(res[2],4)}\t{round(res[3],4)}")
-
+                        restext2 = "trobot module error"
+                    if (res[0]):
+                        print(clor+styl+f"{restext}\tTRUE\t{restext2}")
+                    else:
+                        print(clor+styl+f"{restext}\tFALSE\t{restext2}")
                     if errstate:
                         print(clor+styl+f"error occurred on await websocket.recv()")
                         errstate = 0
-                    '''
-                    for r in res:
-                        print("receptionP:",round(r,4),end=" ")
-                    print("")
-                    '''
+                    print(Fore.WHITE+Style.NORMAL+"",end="")
                     # end ------ > trobot C module < ----------------------------------------------------
             print(clor+styl+f"ツシ that's all folks ----- > {symbol}:{graphtimeperiod}")
+            print(Fore.WHITE+Style.NORMAL+"",end="")
     except websockets.exceptions.ConnectionClosed:
         #import sys
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
