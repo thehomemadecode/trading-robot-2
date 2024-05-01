@@ -7,7 +7,8 @@
 #define GT '>'
 #define LT '<'
 #define ET '='
-
+	int num_cols_int = 0;
+	int num_rows_int = 0;
 /* TA functions section begin */
 double testindicator(double **a, int col, int len) {
 	double ti = 0;
@@ -64,21 +65,31 @@ struct macdseriesstruct {
     double macd26;
     double macdsignal;
 };
-struct macdseriesstruct macd_s(double **aa, int col, int macd12len, int macd26len, int smoothing_signal_length) {
+struct macdseriesstruct macd(double **a, int col, int macd12len, int macd26len, int smoothing_signal_length) {
 	double macd = 0;
 	double macd12 = 0;
 	double macd26 = 0;
 	double macdsignal = 0;
 
-	macd12 = ema(aa,col,macd12len);
-	macd26 = ema(aa,col,macd26len);
+	macd12 = ema(a,col,macd12len);
+	macd26 = ema(a,col,macd26len);
 	macd = macd12-macd26;
 
+	double **a2 = (double **)malloc(num_rows_int * sizeof(double *));
+    for (int i = 0; i < num_rows_int; i++) {
+        a2[i] = (double *)malloc(num_cols_int * sizeof(double));
+    }
+	for (int i=0;i<num_rows_int;i++) {
+		for (int j=0;j<num_cols_int;j++) {
+			a2[i][j] = a[i][j];
+		}
+	}
+
 	for (int i=0; i<smoothing_signal_length; i++) {
-		macdsignal += ema(aa,col,macd12len)-ema(aa,col,macd26len);
+		macdsignal += ema(a2,col,macd12len)-ema(a2,col,macd26len);
 		for (int i=0;i<macd26len+smoothing_signal_length;i++) {
 			for (int j=0;j<6;j++) {
-				aa[i][j] = aa[i+1][j];
+				a2[i][j] = a2[i+1][j];
 			}
 		}
 	}
@@ -94,13 +105,13 @@ struct macdseriesstruct macd_s(double **aa, int col, int macd12len, int macd26le
 	return macdseries;
 	//return macd;
 }
-struct macdseriesstruct macd(double **aa, int col, int macd12len, int macd26len, int temp) {
+struct macdseriesstruct macd_s(double **a, int col, int macd12len, int macd26len, int temp) {
 	double macd = 0;
 	double macd12 = 0;
 	double macd26 = 0;
 
-	macd12 = ema(aa,col,macd12len);
-	macd26 = ema(aa,col,macd26len);
+	macd12 = ema(a,col,macd12len);
+	macd26 = ema(a,col,macd26len);
 	macd = macd12-macd26;
 
 	struct macdseriesstruct macdseries;
@@ -144,7 +155,10 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			data_c[i][j] = PyFloat_AsDouble(item);
 		}
 	}
-
+	num_cols_int = (int)num_cols;
+	num_rows_int = (int)num_rows;
+	//printf("data_c[i][j]: %d %d\n",num_rows_int,num_cols_int);
+	
 	// --> analysisrule 'atoms'
 	PyObject* analysisrulePy = PyUnicode_AsUTF8String(analysisrule);
 	char* analysisruleC = PyBytes_AsString(analysisrulePy);
