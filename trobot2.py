@@ -245,7 +245,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    if (sayac>10):break # stop 
+                    if (sayac>5):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                         dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
