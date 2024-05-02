@@ -52,7 +52,7 @@ wbvnum = random.weibullvariate(alpha, beta)
 #print(round(wbvnum,4))
 
 datasend = []
-for d in range(0,40):
+for d in range(0,100):
     row = []
     for i in range(0,6):
         wbvnum = random.weibullvariate(alpha, beta)

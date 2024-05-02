@@ -9,17 +9,21 @@
 #define ET '='
 
 /* TA functions section begin */
+double testindicator(double **a, int col, int len) {
+	double ti = 0;
+	ti = len + col;
+	return ti;
+}
 double sma(double **a, int col, int len) {
 	double sma = 0;
 	for (int e=0;e<len;e++) {
-		//printf("%d %d %f\n",e,len,a[e][3]);
 		sma += a[e][col];
 	}
 	sma = sma/len;
 	return sma;
 }
-//EMA = alpha * source + (1 - alpha) * EMA[1], ;; alpha = 2 / (length + 1).
 double ema(double **a, int col, int len) {
+	//EMA = alpha * source + (1 - alpha) * EMA[1] ;; alpha = 2.0 / (length + 1).
 	double sma = 0;
 	for (int i=len*2;i<len*3;i++) {
 		sma += a[i][col];
@@ -51,40 +55,80 @@ double rsi(double **a, int col, int len) {
 	}	
 	gain /= len;
 	loss /= len;
-	//printf("%d %d \n",g,l);
 	rsi = 100 - (100/(1+(gain/loss)));
 	return rsi;
 }
-double *macd(double **a, int col, int macd12len, int macd26len, int smoothing_signal_length) {
+struct macdseriesstruct {
+    double macd;
+    double macd12;
+    double macd26;
+    double macdsignal;
+};
+int num_cols_int = 0;
+int num_rows_int = 0;
+struct macdseriesstruct macd(double **a, int col, int macd12len, int macd26len, int temp) {
+	double macd = 0;
+	double macd12 = 0;
+	double macd26 = 0;
+
+	macd12 = ema(a,col,macd12len);
+	macd26 = ema(a,col,macd26len);
+	macd = macd12-macd26;
+
+	struct macdseriesstruct macdseries;
+	macdseries.macd = macd;
+	macdseries.macd12 = macd12;
+	macdseries.macd26 = macd26;
+	macdseries.macdsignal = temp;
+
+	return macdseries;
+}
+struct macdseriesstruct macd_s(double **a, int col, int macd12len, int macd26len, int smoothing_signal_length) {
 	double macd = 0;
 	double macd12 = 0;
 	double macd26 = 0;
 	double macdsignal = 0;
 
-	//printf("col:%d macd12/26len:%d %d\n",col,macd12len,macd26len);
 	macd12 = ema(a,col,macd12len);
 	macd26 = ema(a,col,macd26len);
 	macd = macd12-macd26;
 
+	double **a2 = (double **)malloc(num_rows_int * sizeof(double *));
+    for (int i = 0; i < num_rows_int; i++) {
+        a2[i] = (double *)malloc(num_cols_int * sizeof(double));
+    }
+	for (int i=0;i<num_rows_int;i++) {
+		for (int j=0;j<num_cols_int;j++) {
+			a2[i][j] = a[i][j];
+		}
+	}
 	for (int i=0; i<smoothing_signal_length; i++) {
-		macdsignal += ema(a,col,macd12len)-ema(a,col,macd26len);
+		macdsignal += ema(a2,col,macd12len)-ema(a2,col,macd26len);
 		for (int i=0;i<macd26len+smoothing_signal_length;i++) {
 			for (int j=0;j<6;j++) {
-				a[i][j] = a[i+1][j];
+				a2[i][j] = a2[i+1][j];
 			}
 		}
 	}
-	double macdseries[4] = {macd,macd12,macd26,macdsignal/smoothing_signal_length};
-	printf("macd:%f m12:%f m26:%f sig:%f \n",macd,macd12,macd26,macdsignal/smoothing_signal_length);
+	macdsignal = macdsignal/smoothing_signal_length;
+	//printf("macdsignal: %f\n",macdsignal);
+
+	struct macdseriesstruct macdseries;
+	macdseries.macd = macd;
+	macdseries.macd12 = macd12;
+	macdseries.macd26 = macd26;
+	macdseries.macdsignal = macdsignal;
 	return macdseries;
-	//return macd;
 }
 /* TA functions section end */
 
 /* function map section begin */
-const char *functionsTAlist[4] = {"sma", "ema", "rsi", "macd"};
-double (*functionsTA[])(double**, int, int) = {sma, ema, rsi};
-double *(*functionsTA2[])(double**, int, int, int, int) = {macd};
+#define lst 4 // number of elements of the functionsTAlist array
+const char *functionsTAlist[lst] = {"testindicator", "sma", "ema", "rsi"};
+double (*functionsTA[])(double**, int, int) = {testindicator, sma, ema, rsi};
+#define lst3 2 // number of elements of the functionsTAlist3 array
+const char *functionsTAlist3[lst3] = {"macd", "macd_s"};
+struct macdseriesstruct (*functionsTA3[])(double**, int, int, int, int) = {macd, macd_s};
 /* function map section end */
 
 /* Reception function for incoming data: */
@@ -110,7 +154,10 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			data_c[i][j] = PyFloat_AsDouble(item);
 		}
 	}
-
+	num_cols_int = (int)num_cols;
+	num_rows_int = (int)num_rows;
+	//printf("data_c[i][j]: %d %d\n",num_rows_int,num_cols_int);
+	
 	// --> analysisrule 'atoms'
 	PyObject* analysisrulePy = PyUnicode_AsUTF8String(analysisrule);
 	char* analysisruleC = PyBytes_AsString(analysisrulePy);
@@ -123,7 +170,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 	char word1f[20], word2f[20], word3f[20];
 	int param1, param12, param13;
 	int param2, param22, param23;
-	int param3;
+	int param3, param32, param33;
 	double res1, res2, res3;
 	const char *ohlclist[6] = {"open", "high", "low", "close", "volume", "qvolume"};
 	unsigned char result,result2;
@@ -131,21 +178,24 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		int m1 = sscanf(word1, "%[^(](%d,%d,%d)", word1f, &param1, &param12, &param13);
 		int m2 = sscanf(word2, "%[^(](%d,%d,%d)", word2f, &param2, &param22, &param23);
 		//printf("%d %d\n",m1,m2);
+		
+		// matched:3 m1:4-2-?
 		if (m1==4) {
-			//double* arr;
-			//arr = macd(data_c, col, param1, param12, param13);
-			macd(data_c, col, param1, param12, param13);
-			/*
-			printf("arr0: %f\n",arr[0]);
-			printf("arr1: %f\n",arr[1]);
-			printf("arr2: %f\n",arr[2]);
-			printf("arr3: %f\n",arr[3]);
-			*/
-			res1 = 0;
-		}
-		if (m1==2) {
+			for (int i=0; i<lst3; i++) {
+				if (strcmp(functionsTAlist3[i], word1f) == 0) {
+					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param1, param12, param13);
+					res1 = macdres.macd;
+					/*
+					printf("macd: %f ",macdres.macd);
+					printf("macd12: %f ",macdres.macd12);
+					printf("macd26: %f ",macdres.macd26);
+					printf("macdsignal: %f\n",macdres.macdsignal);
+					*/
+				}
+			}
+		} else if (m1==2) {
 			//printf("word1: %s %d\n", word1f,param1);
-			for (int i = 0; i < 4; ++i) {
+			for (int i=0; i<lst; i++) {
 				if (strcmp(functionsTAlist[i], word1f) == 0) {
 					res1 = functionsTA[i](data_c, col, param1);
 					//printf("_res1: %f\n",res1);
@@ -155,7 +205,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		} else {
 			//printf("word1: %s\n", word1);
 			char numberv = 1;
-			for (int i = 0; i < 6; ++i) {
+			for (int i=0; i<6; i++) {
 				if (strcmp(ohlclist[i], word1) == 0) {
 					res1 = data_c[0][i];
 					//printf("_%s: %f\n",word1,res1);
@@ -166,9 +216,24 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			if (numberv) {sscanf(word1, "%lf", &res1);//printf("numberv res1: %f\n",res1);
 			}
 		}
-		if (m2==2) {
+
+		// matched:3 m2:4-2-?
+		if (m2==4) {
+			for (int i=0; i<lst3; i++) {
+				if (strcmp(functionsTAlist3[i], word2f) == 0) {
+					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
+					res2 = macdres.macd;
+					/*
+					printf("macd: %f ",macdres.macd);
+					printf("macd12: %f ",macdres.macd12);
+					printf("macd26: %f ",macdres.macd26);
+					printf("macdsignal: %f\n",macdres.macdsignal);
+					*/
+				}
+			}
+		} else if (m2==2) {
 			//printf("word2: %s %d\n", word2f,param2);
-			for (int i = 0; i < 4; ++i) {
+			for (int i=0; i<lst; i++) {
 				if (strcmp(functionsTAlist[i], word2f) == 0) {
 					res2 = functionsTA[i](data_c, col, param2);
 					//printf("_res2: %f\n",res2);
@@ -178,7 +243,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		} else {
 			//printf("word2: %s\n", word2);
 			char numberv = 1;
-			for (int i = 0; i < 6; ++i) {
+			for (int i=0; i<6; i++) {
 				if (strcmp(ohlclist[i], word2) == 0) {
 					res2 = data_c[0][i];
 					//printf("_%s: %f\n",word2,res2);
@@ -199,13 +264,28 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 
 	} 
 	else if (matched == 5) {
-		int m1 = sscanf(word1, "%[^(](%d)", word1f, &param1);
-		int m2 = sscanf(word2, "%[^(](%d)", word2f, &param2);
-		int m3 = sscanf(word3, "%[^(](%d)", word3f, &param3);
+		int m1 = sscanf(word1, "%[^(](%d,%d,%d)", word1f, &param1, &param12, &param13);
+		int m2 = sscanf(word2, "%[^(](%d,%d,%d)", word2f, &param2, &param22, &param23);
+		int m3 = sscanf(word3, "%[^(](%d,%d,%d)", word3f, &param3, &param32, &param33);
 		//printf("%d %d %d\n",m1,m2,m3);
-		if (m1==2) {
+
+		// matched:5 m1:4-2-?
+		if (m1==4) {
+			for (int i=0; i<lst3; i++) {
+				if (strcmp(functionsTAlist3[i], word1f) == 0) {
+					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param1, param12, param13);
+					res1 = macdres.macd;
+					/*
+					printf("macd: %f ",macdres.macd);
+					printf("macd12: %f ",macdres.macd12);
+					printf("macd26: %f ",macdres.macd26);
+					printf("macdsignal: %f\n",macdres.macdsignal);
+					*/
+				}
+			}
+		} else if (m1==2) {
 			//printf("word1: %s %d\n", word1f,param1);
-			for (int i = 0; i < 4; ++i) {
+			for (int i=0; i<lst; i++) {
 				if (strcmp(functionsTAlist[i], word1f) == 0) {
 					res1 = functionsTA[i](data_c, col, param1);
 					//printf("_res1: %f\n",res1);
@@ -215,7 +295,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		} else {
 			//printf("word1: %s\n", word1);
 			char numberv = 1;
-			for (int i = 0; i < 6; ++i) {
+			for (int i=0; i<6; i++) {
 				if (strcmp(ohlclist[i], word1) == 0) {
 					res1 = data_c[0][i];
 					//printf("_%s: %f\n",word1,res1);
@@ -226,9 +306,25 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			if (numberv) {sscanf(word1, "%lf", &res1);//printf("numberv res1: %f\n",res1);
 			}
 		}
-		if (m2==2) {
+
+		// matched:5 m2:4-2-?
+		if (m2==4) {
+			int listsize = sizeof(functionsTAlist3);
+			for (int i=0; i<lst3; i++) {
+				if (strcmp(functionsTAlist3[i], word2f) == 0) {
+					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
+					res2 = macdres.macd;
+					/*
+					printf("macd: %f ",macdres.macd);
+					printf("macd12: %f ",macdres.macd12);
+					printf("macd26: %f ",macdres.macd26);
+					printf("macdsignal: %f\n",macdres.macdsignal);
+					*/
+				}
+			}
+		} else if (m2==2) {
 			//printf("word2: %s %d\n", word2f,param2);
-			for (int i = 0; i < 4; ++i) {
+			for (int i=0; i<lst; i++) {
 				if (strcmp(functionsTAlist[i], word2f) == 0) {
 					res2 = functionsTA[i](data_c, col, param2);
 					//printf("_res2: %f\n",res2);
@@ -238,7 +334,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		} else {
 			//printf("word2: %s\n", word2);
 			char numberv = 1;
-			for (int i = 0; i < 6; ++i) {
+			for (int i=0; i<6; i++) {
 				if (strcmp(ohlclist[i], word2) == 0) {
 					res2 = data_c[0][i];
 					//printf("_%s: %f\n",word2,res2);
@@ -249,9 +345,24 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			if (numberv) {sscanf(word2, "%lf", &res2);//printf("numberv res2: %f\n",res2);
 			}
 		}
-		if (m3==2) {
+
+		// matched:5 m3:4-2-?
+		if (m3==4) {
+			for (int i=0; i<lst3; i++) {
+				if (strcmp(functionsTAlist3[i], word3f) == 0) {
+					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param3, param32, param33);
+					res3 = macdres.macd;
+					/*
+					printf("macd: %f ",macdres.macd);
+					printf("macd12: %f ",macdres.macd12);
+					printf("macd26: %f ",macdres.macd26);
+					printf("macdsignal: %f\n",macdres.macdsignal);
+					*/
+				}
+			}
+		} else if (m3==2) {
 			//printf("word3: %s %d\n", word3f,param3);
-			for (int i = 0; i < 4; ++i) {
+			for (int i=0; i<lst; i++) {
 				if (strcmp(functionsTAlist[i], word3f) == 0) {
 					res3 = functionsTA[i](data_c, col, param3);
 					//printf("_res3: %f\n",res3);
@@ -261,7 +372,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 		} else {
 			//printf("word3: %s\n", word3);
 			char numberv = 1;
-			for (int i = 0; i < 6; ++i) {
+			for (int i=0; i<6; i++) {
 				if (strcmp(ohlclist[i], word3) == 0) {
 					res3 = data_c[0][i];
 					//printf("_%s: %f\n",word3,res3);
