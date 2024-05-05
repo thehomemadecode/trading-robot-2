@@ -123,9 +123,11 @@ struct macdseriesstruct macd_s(double **a, int col, int macd12len, int macd26len
 /* TA functions section end */
 
 /* function map section begin */
+// functionsTA
 #define lst 4 // number of elements of the functionsTAlist array
 const char *functionsTAlist[lst] = {"testindicator", "sma", "ema", "rsi"};
 double (*functionsTA[])(double**, int, int) = {testindicator, sma, ema, rsi};
+// functionsTA3
 #define lst3 2 // number of elements of the functionsTAlist3 array
 const char *functionsTAlist3[lst3] = {"macd", "macd_s"};
 struct macdseriesstruct (*functionsTA3[])(double**, int, int, int, int) = {macd, macd_s};
