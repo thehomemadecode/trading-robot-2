@@ -17,7 +17,8 @@ python3 setup.py build_ext --inplace
 
 ## Run
 ```bash
-# Before run, complete the data initializing: in the \initdata directory run: python3 init_multi.py
+# Before run, complete the data initializing:
+# in the \initdata directory run: python3 init_multi.py
 python3 trobot2.py
 ```
 ![C](https://img.shields.io/badge/c-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
