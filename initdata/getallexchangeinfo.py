@@ -1,12 +1,16 @@
 from binance.spot import Spot
 
+rversion = "2.0.0b"
+
 # read config.ini
 def init_config(filename):
     config = {}
     current_section = None
     with open(filename, 'r') as file:
         for line in file:
-            line = line.strip()
+            line = line.split('#')[0].strip()
+            line = line.replace(" ", "")
+            #line = line.strip()
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
@@ -30,8 +34,16 @@ def main():
     filename = "config.ini"
     config = init_config(filename)
 
+    cversion = config['config_version']['cversion']
+    if cversion != rversion:
+        print("Upss! version robot-config conflict.")
+        exit()
+    else:
+        print("getallexchangeinfo.py version: ",rversion)
+
+
     # settings vars
-    alldatafilename = config['trobot Inputs']['alldatafilename']
+    alldatafilename = config['trobot_Inputs']['alldatafilename']
 
     # get infos
     alldata = preparedatafile(alldatafilename)

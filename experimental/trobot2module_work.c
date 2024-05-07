@@ -59,6 +59,7 @@ double rsi(double **a, int col, int len) {
 	return rsi;
 }
 struct macdseriesstruct {
+	double result;
     double macd;
     double macd12;
     double macd26;
@@ -76,6 +77,7 @@ struct macdseriesstruct macd(double **a, int col, int macd12len, int macd26len, 
 	macd = macd12-macd26;
 
 	struct macdseriesstruct macdseries;
+	macdseries.result = macd;
 	macdseries.macd = macd;
 	macdseries.macd12 = macd12;
 	macdseries.macd26 = macd26;
@@ -114,6 +116,7 @@ struct macdseriesstruct macd_s(double **a, int col, int macd12len, int macd26len
 	//printf("macdsignal: %f\n",macdsignal);
 
 	struct macdseriesstruct macdseries;
+	macdseries.result = macdsignal;
 	macdseries.macd = macd;
 	macdseries.macd12 = macd12;
 	macdseries.macd26 = macd26;
@@ -186,7 +189,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			for (int i=0; i<lst3; i++) {
 				if (strcmp(functionsTAlist3[i], word1f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param1, param12, param13);
-					res1 = macdres.macd;
+					res1 = macdres.result;
 					/*
 					printf("macd: %f ",macdres.macd);
 					printf("macd12: %f ",macdres.macd12);
@@ -224,7 +227,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			for (int i=0; i<lst3; i++) {
 				if (strcmp(functionsTAlist3[i], word2f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
-					res2 = macdres.macd;
+					res2 = macdres.result;
 					/*
 					printf("macd: %f ",macdres.macd);
 					printf("macd12: %f ",macdres.macd12);
@@ -276,7 +279,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			for (int i=0; i<lst3; i++) {
 				if (strcmp(functionsTAlist3[i], word1f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param1, param12, param13);
-					res1 = macdres.macd;
+					res1 = macdres.result;
 					/*
 					printf("macd: %f ",macdres.macd);
 					printf("macd12: %f ",macdres.macd12);
@@ -315,7 +318,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			for (int i=0; i<lst3; i++) {
 				if (strcmp(functionsTAlist3[i], word2f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
-					res2 = macdres.macd;
+					res2 = macdres.result;
 					/*
 					printf("macd: %f ",macdres.macd);
 					printf("macd12: %f ",macdres.macd12);
@@ -353,7 +356,7 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 			for (int i=0; i<lst3; i++) {
 				if (strcmp(functionsTAlist3[i], word3f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param3, param32, param33);
-					res3 = macdres.macd;
+					res3 = macdres.result;
 					/*
 					printf("macd: %f ",macdres.macd);
 					printf("macd12: %f ",macdres.macd12);

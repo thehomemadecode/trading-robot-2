@@ -2,13 +2,17 @@ from binance.spot import Spot
 import sqlite3
 #import time
 
+rversion = "2.0.0b"
+
 # read config.ini
 def init_config(filename):
     config = {}
     current_section = None
     with open(filename, 'r') as file:
         for line in file:
-            line = line.strip()
+            line = line.split('#')[0].strip()
+            line = line.replace(" ", "")
+            #line = line.strip()
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
@@ -37,20 +41,27 @@ def main():
     config = init_config(filename)
     
     # settings const
-    #fxtypes = eval(config['trobot Inputs']['fxtypes'])
-    #statustypes = eval(config['trobot Inputs']['statustypes'])
+    #fxtypes = eval(config['trobot_Inputs']['fxtypes'])
+    #statustypes = eval(config['trobot_Inputs']['statustypes'])
     # settings vars
-    #exclusions = eval(config['trobot Inputs']['exclusions'])
-    #inclusions = eval(config['trobot Inputs']['inclusions'])
-    #alldatafilename = config['trobot Inputs']['alldatafilename']
-    #fx = fxtypes[int(config['trobot Inputs']['fx'])]
-    #status = statustypes[int(config['trobot Inputs']['status'])]
-    #isMarginTradingAllowed = config['trobot Inputs']['isMarginTradingAllowed']
-    maxklines = int(config['trobot Inputs']['maxklines'])
-    graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
-    prefix = config['trobot Inputs']['prefix']
-    dbfilename = config['trobot Inputs']['dbfilename']
-    limit = int(config['trobot Inputs']['assetlimit'])
+    #exclusions = eval(config['trobot_Inputs']['exclusions'])
+    #inclusions = eval(config['trobot_Inputs']['inclusions'])
+    #alldatafilename = config['trobot_Inputs']['alldatafilename']
+    #fx = fxtypes[int(config['trobot_Inputs']['fx'])]
+    #status = statustypes[int(config['trobot_Inputs']['status'])]
+    #isMarginTradingAllowed = config['trobot_Inputs']['isMarginTradingAllowed']
+    maxklines = int(config['trobot_Inputs']['maxklines'])
+    graphtimeperiodlist = eval(config['trobot_Inputs']['graphtimeperiodlist'])
+    prefix = config['trobot_Inputs']['prefix']
+    dbfilename = config['trobot_Inputs']['dbfilename']
+    limit = int(config['trobot_Inputs']['assetlimit'])
+
+    cversion = config['config_version']['cversion']
+    if cversion != rversion:
+        print("Upss! version robot-config conflict.")
+        exit()
+    else:
+        print("makehistory.py version: ",rversion)
 
     # connect binance
     client = Spot()
@@ -141,7 +152,6 @@ def main():
     symbollist = eval(temp)
 
     #print(len(symbollist))
-    
 
     # get selected symbol's OHLCV & data
     dbconnection = dbconnect(dbfilename)

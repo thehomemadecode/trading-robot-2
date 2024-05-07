@@ -1,5 +1,7 @@
 import os
 
+rversion = "2.0.0b"
+
 def main():
     cmd1 = 'python getallexchangeinfo.py'
     cmd2 = 'python makeCandlestickDB.py'

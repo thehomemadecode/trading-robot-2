@@ -7,6 +7,7 @@ def init_config(filename):
     current_section = None
     with open(filename, 'r') as file:
         for line in file:
+            line = line.split('#')[0].strip()
             line = line.strip()
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]

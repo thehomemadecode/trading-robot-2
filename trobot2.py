@@ -1,4 +1,3 @@
-# trobot2 main body (21 Apr)
 import sqlite3
 import trobot2 as tr
 from binance.spot import Spot
@@ -15,6 +14,7 @@ from math import ceil, floor
 
 FORES = [ Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE ]
 STYLES = [ Style.DIM, Style.NORMAL, Style.BRIGHT ]
+rversion = "2.0.0b"
 
 # read config.ini
 def init_config(filename):
@@ -22,7 +22,9 @@ def init_config(filename):
     current_section = None
     with open(filename, 'r') as file:
         for line in file:
-            line = line.strip()
+            line = line.split('#')[0].strip()
+            line = line.replace(" ", "")
+            #line = line.strip()
             if line.startswith('[') and line.endswith(']'):
                 current_section = line[1:-1]
                 config[current_section] = {}
@@ -36,11 +38,19 @@ def init_config(filename):
 def init_rules(config_rules):
     allrules = []
     for item in config_rules:
+        item = item.replace(" ", "")
         items = []
         allrules.append(items)
         items.append(item)
         items.append(config_rules[f'{item}'])
     return allrules
+
+def select_rule(allrules):
+    rulename = allrules[0][1]
+    for rule in allrules:
+        if rulename == rule[0]:
+            break
+    return rule[1]
 
 # date conversion: human readable to machine
 def dateconvert(date):
@@ -204,7 +214,7 @@ def db_read(dbcon):
     return selecteddata
 
 # ----------------------------------------------------------------------------------------------
-async def get_data(baseurl,dbcon,col,data,sayac,errstate):
+async def get_data(baseurl,dbcon,col,data,sayac,errstate,runninglimit):
     clor = random.sample(FORES,k=1)
     styl = random.sample(STYLES,k=1)
     clor = clor[0]
@@ -245,7 +255,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     else:
                         klinechangedmessage="-"
                     sayac += 1
-                    if (sayac>5):break # stop 
+                    if (sayac>runninglimit):break # stop 
                     if (timediff != 0):
                         dbtable = f"{prefix}_{symbol}_{graphtimeperiod}"
                         dbcur.execute(f"SELECT * FROM {dbtable} ORDER BY open_time DESC LIMIT 1;")
@@ -277,7 +287,7 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
                     filename = "config.ini"
                     config = init_config(filename)
                     allrules = init_rules(config['rules'])
-                    analysisrule = allrules[0][1]
+                    analysisrule = select_rule(allrules)
                     res = tr.receptionP(data[4],col,analysisrule)
                     restext = f"{sayac}: [{timestr}]\t{symbol}:{graphtimeperiod}\t{closeprice}\t{klinechangedmessage}"
                     if (len(res)==3):
@@ -302,13 +312,13 @@ async def get_data(baseurl,dbcon,col,data,sayac,errstate):
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
         #print(f"{symbol}\t\tConnection closed. Reconnecting...")
         await asyncio.sleep(2)
-        await get_data(baseurl,dbcon,col,data,sayac,1)
+        await get_data(baseurl,dbcon,col,data,sayac,1,runninglimit)
     except asyncio.TimeoutError:
         #import sys
         #print('An error has occurred. Line number: {}'.format(sys.exc_info()[-1].tb_lineno))
         #print(f"{symbol}\t\tConnection timed out. Reconnecting...")
         await asyncio.sleep(2)
-        await get_data(baseurl,dbcon,col,data,sayac,1)
+        await get_data(baseurl,dbcon,col,data,sayac,1,runninglimit)
     except Exception as err:
         print(clor+styl,symbol,graphtimeperiod,type(err).__name__, err)
 
@@ -318,16 +328,16 @@ async def get_klines(baseurl, barsymbol, graphtimeperiod, klimit):
     bars = clientws.klines(barsymbol, graphtimeperiod, limit = klimit)
     return bars
 
-async def worker(baseurl,dbcon,col,selecteddata,s,f):
+async def worker(baseurl,dbcon,col,selecteddata,s,f,runninglimit):
     partedselecteddata = []
     for i in range(s,f):
         partedselecteddata.append(selecteddata[i])
-    tasks = [get_data(baseurl,dbcon,col,data,0,0) for data in partedselecteddata]
+    tasks = [get_data(baseurl,dbcon,col,data,0,0,runninglimit) for data in partedselecteddata]
     await asyncio.gather(*tasks)
 
-def dowork(baseurl,dbfilename,col,selecteddata,s,f):
+def dowork(baseurl,dbfilename,col,selecteddata,s,f,runninglimit):
     dbcon = dbconnect(dbfilename)
-    asyncio.run(worker(baseurl,dbcon,col,selecteddata,s,f))
+    asyncio.run(worker(baseurl,dbcon,col,selecteddata,s,f,runninglimit))
     dbcon.close()
 # ----------------------------------------------------------------------------------------------
 
@@ -335,12 +345,28 @@ def main():
     # read configs
     filename = "config.ini"
     config = init_config(filename)
-    ohlvcq = config['trobot Inputs']['ohlvcq']
-    col = letter_to_number(ohlvcq)
-    dbfilename = config['trobot Inputs']['dbfilename']
-    limit = int(config['trobot Inputs']['assetlimit'])
-    graphtimeperiodlist = eval(config['trobot Inputs']['graphtimeperiodlist'])
-    maxklines = int(config['trobot Inputs']['maxklines'])
+    ohlcvq = config['trobot_Inputs']['ohlcvq']
+    col = letter_to_number(ohlcvq)
+    dbfilename = config['trobot_Inputs']['dbfilename']
+    limit = int(config['trobot_Inputs']['assetlimit'])
+    graphtimeperiodlist = eval(config['trobot_Inputs']['graphtimeperiodlist'])
+    maxklines = int(config['trobot_Inputs']['maxklines'])
+    runninglimit = int(config['trobot_Inputs']['runninglimit'])
+
+    cversion = config['config_version']['cversion']
+    if cversion != rversion:
+        print("Upss! robot-config version conflict.")
+        exit()
+    else:
+        print("trobot2.py version: ",rversion)
+
+    cmodulevercheck = tr.versioncheck(rversion)
+    if cmodulevercheck:
+        pass
+    else:
+        print("Upss! robot C module version conflict.")
+        exit()
+    
 
     dbcon = dbconnect(dbfilename)
     client = Spot()
@@ -360,25 +386,25 @@ def main():
     tasknum = tdivide
     if (tremind>0):tasknum += 1
     tremind -= 1
-    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,0,tasknum))
+    p1 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,0,tasknum,runninglimit))
 
     baseurl = "https://api1.binance.com"
     tasknum2 = tasknum + tdivide
     if (tremind>0):tasknum2 += 1
     tremind -= 1
-    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum,tasknum2))
+    p2 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum,tasknum2,runninglimit))
 
     baseurl = "https://api2.binance.com"
     tasknum3 = tasknum2 + tdivide
     if (tremind>0):tasknum3 += 1
     tremind -= 1
-    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum2,tasknum3))
+    p3 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum2,tasknum3,runninglimit))
 
     baseurl = "https://api3.binance.com"
     tasknum4 = tasknum3 + tdivide
     if (tremind>0):tasknum4 += 1
     tremind -= 1
-    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum3,tasknum4))
+    p4 = multiprocessing.Process(target=dowork, args=(baseurl,dbfilename,col,selecteddata,tasknum3,tasknum4,runninglimit))
 
     p1.start()
     p2.start()

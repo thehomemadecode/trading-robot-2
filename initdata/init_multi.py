@@ -3,6 +3,8 @@ import subprocess
 import shutil
 import os
 
+rversion = "2.0.0b"
+
 def run_command(command):
     """
     Runs a shell command and waits for it to complete.
