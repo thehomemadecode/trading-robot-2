@@ -22,3 +22,9 @@ python3 trobot2.py
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Linux](https://img.shields.io/badge/Linux-FFFFFF?style=for-the-badge&logo=linux&logoColor=black)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+
+---
+**Disclaimer:**
+
+Use at your own risk. Please note that the trading robot provided for Binance is a tool designed to assist in trading activities. While it may offer automated trading functionalities, it does not guarantee profits or eliminate risks associated with cryptocurrency trading. Users should exercise caution and conduct thorough research before engaging in any trading activities. Additionally, past performance is not indicative of future results. The use of this trading robot is at the sole discretion and risk of the user. The program author and its affiliates are not responsible for any financial losses incurred as a result of using this tool. Use at your own risk.
+---
