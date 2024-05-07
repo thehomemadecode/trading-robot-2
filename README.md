@@ -5,6 +5,7 @@
 The trading robot for
 ![Binance](https://img.shields.io/badge/Binance-FCD535?style=for-the-badge&logo=binance&logoColor=white)
 [![PyPI version](https://img.shields.io/pypi/v/binance-connector)](https://pypi.python.org/pypi/binance-connector)
+
 -> Track the prices of coins listed on the Binance spot exchange market according to predetermined rules are located in \initdata\config.ini (in the runtime \config.ini)
 
 ## Installation
