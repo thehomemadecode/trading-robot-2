@@ -13,7 +13,7 @@ The trading robot for
 pip install -r requirements.txt &&
 python3 setup.py build_ext --inplace
 ```
-[![Build C Extension Across Python Versions on Linux and Windows](https://github.com/thehomemadecode/trobot2/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/thehomemadecode/trobot2/actions/workflows/python-package.yml)
+-> or just download the latest extension: [![Build C Extension Across Python Versions on Linux and Windows](https://github.com/thehomemadecode/trobot2/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/thehomemadecode/trobot2/actions/workflows/python-package.yml)
 
 ## Run
 ```bash
