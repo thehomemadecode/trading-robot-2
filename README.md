@@ -1,4 +1,4 @@
-# Trading Robot 2
+# Trading Robot 2.0.0b
 ![tr2](https://img.shields.io/badge/thehomemadecode-Trading_Robot_2-blue)
 [![Python version](https://img.shields.io/pypi/pyversions/binance-connector)](https://www.python.org/downloads/)
 
