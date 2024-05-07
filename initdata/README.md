@@ -17,3 +17,4 @@ python initdata_windows.py
 getallexchangeinfo.py: create alldata.txt<br />
 makeCandlestickDB.py: create blank DB<br />
 makehistory.py: write data into DB
+symbollist: system keeps coins names in this file before running trobot.
