@@ -342,6 +342,9 @@ def dowork(baseurl,dbfilename,col,selecteddata,s,f,runninglimit):
 # ----------------------------------------------------------------------------------------------
 
 def main():
+    print("Disclaimer:")
+    print("Use at your own risk. Please note that the trading robot provided for Binance is a tool designed to assist in trading activities. While it may offer automated trading functionalities, it does not guarantee profits or eliminate risks associated with cryptocurrency trading. Users should exercise caution and conduct thorough research before engaging in any trading activities. Additionally, past performance is not indicative of future results. The use of this trading robot is at the sole discretion and risk of the user. The program author and its affiliates are not responsible for any financial losses incurred as a result of using this tool.")
+    print("Use at your own risk.")
     # read configs
     filename = "config.ini"
     config = init_config(filename)
