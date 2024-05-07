@@ -3,7 +3,13 @@ candlestick.db
 alldata.txt
 DBSQLite.lnk
 trobot2.cp311-win_amd64.pyd
+trobot2.cp310-win_amd64.pyd
+trobot2.cp39-win_amd64.pyd
+trobot2.cp38-win_amd64.pyd
 trobot2.cpython-311-x86_64-linux-gnu.so
+trobot2.cpython-310-x86_64-linux-gnu.so
+trobot2.cpython-39-x86_64-linux-gnu.so
+trobot2.cpython-38-x86_64-linux-gnu.so
 __pycache__/*
 build/*
 experimental/build

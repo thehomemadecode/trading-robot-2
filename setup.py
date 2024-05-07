@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
 
 def main():
     setup(name="trobot2",
-          version="2.0.0",
+          version="2.0.0b",
           description="Python interface for the trobot C library function",
           author="thehomemadecode",
           author_email="thehomemadecode@gmail.com",
