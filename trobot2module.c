@@ -190,12 +190,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 				if (strcmp(functionsTAlist3[i], word1f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param1, param12, param13);
 					res1 = macdres.result;
-					/*
-					printf("macd: %f ",macdres.macd);
-					printf("macd12: %f ",macdres.macd12);
-					printf("macd26: %f ",macdres.macd26);
-					printf("macdsignal: %f\n",macdres.macdsignal);
-					*/
 				}
 			}
 		} else if (m1==2) {
@@ -228,12 +222,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 				if (strcmp(functionsTAlist3[i], word2f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
 					res2 = macdres.result;
-					/*
-					printf("macd: %f ",macdres.macd);
-					printf("macd12: %f ",macdres.macd12);
-					printf("macd26: %f ",macdres.macd26);
-					printf("macdsignal: %f\n",macdres.macdsignal);
-					*/
 				}
 			}
 		} else if (m2==2) {
@@ -280,12 +268,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 				if (strcmp(functionsTAlist3[i], word1f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param1, param12, param13);
 					res1 = macdres.result;
-					/*
-					printf("macd: %f ",macdres.macd);
-					printf("macd12: %f ",macdres.macd12);
-					printf("macd26: %f ",macdres.macd26);
-					printf("macdsignal: %f\n",macdres.macdsignal);
-					*/
 				}
 			}
 		} else if (m1==2) {
@@ -319,12 +301,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 				if (strcmp(functionsTAlist3[i], word2f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
 					res2 = macdres.result;
-					/*
-					printf("macd: %f ",macdres.macd);
-					printf("macd12: %f ",macdres.macd12);
-					printf("macd26: %f ",macdres.macd26);
-					printf("macdsignal: %f\n",macdres.macdsignal);
-					*/
 				}
 			}
 		} else if (m2==2) {
@@ -357,12 +333,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 				if (strcmp(functionsTAlist3[i], word3f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param3, param32, param33);
 					res3 = macdres.result;
-					/*
-					printf("macd: %f ",macdres.macd);
-					printf("macd12: %f ",macdres.macd12);
-					printf("macd26: %f ",macdres.macd26);
-					printf("macdsignal: %f\n",macdres.macdsignal);
-					*/
 				}
 			}
 		} else if (m3==2) {
