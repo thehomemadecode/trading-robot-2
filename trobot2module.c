@@ -59,7 +59,7 @@ double rsi(double **a, int col, int len) {
 	return rsi;
 }
 struct macdseriesstruct {
-	double result;
+    double result;
     double macd;
     double macd12;
     double macd26;
@@ -415,7 +415,7 @@ static PyObject *versionCheck(PyObject *self, PyObject *args) {
 /* Python.h definitions begin */
 static PyMethodDef trobot2Methods[] = {
 	{"receptionP", receptionC, METH_VARARGS, "Reception function for incoming data."},
-	{"versioncheck", versionCheck, METH_VARARGS, "Reception function for incoming data."},
+	{"versioncheck", versionCheck, METH_VARARGS, "Version checking function."},
 	{NULL, NULL, 0, NULL}
 };
 static struct PyModuleDef trobot2 = {
