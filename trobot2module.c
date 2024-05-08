@@ -296,7 +296,6 @@ static PyObject *receptionC(PyObject *self, PyObject *args) {
 
 		// matched:5 m2:4-2-?
 		if (m2==4) {
-			int listsize = sizeof(functionsTAlist3);
 			for (int i=0; i<lst3; i++) {
 				if (strcmp(functionsTAlist3[i], word2f) == 0) {
 					struct macdseriesstruct macdres = functionsTA3[i](data_c, col, param2, param22, param23);
