@@ -30,7 +30,7 @@ jobs:
             echo "Compiled file not found."
             exit 1
           else
-            ZIP_NAME="trobot2-dev-py${{ matrix.python-version }}-linux.zip"
+            ZIP_NAME="trobot2-main-py${{ matrix.python-version }}-linux.zip"
             zip -r $ZIP_NAME $FILE
             echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
           fi
@@ -56,7 +56,7 @@ jobs:
         shell: pwsh
       - name: Package Extension
         run: |
-          $zipName = "trobot2-dev-py${{ matrix.python-version }}-windows.zip"
+          $zipName = "trobot2-main-py${{ matrix.python-version }}-windows.zip"
           echo "ZIP_NAME=$zipName" | Out-File -Append -FilePath $env:GITHUB_ENV
           Compress-Archive -Path *.pyd -DestinationPath $zipName
         shell: pwsh
